@@ -1,4 +1,5 @@
-// Agent orchestrator: risk → triage → booking → SOAP → one short transaction.
+// Agent orchestrator: risk floor → symptom triage → SOAP → booking → one short transaction.
+// Risk runs first because it is the deterministic safety floor triage can never go below.
 import { z } from "zod";
 import { prisma } from "./db";
 import { parseJson, parseStringArray, toJson } from "./json";
@@ -6,7 +7,8 @@ import { evaluateRisk } from "./risk";
 import { llmTriage, mergeTriage, ruleTriage } from "./triage";
 import { buildSoap, llmSoap, mergeSoap } from "./soap";
 import { planAppointment } from "./booking";
-import { toAppointmentView, toSoapNoteView } from "./views";
+import { asOutcome, toAppointmentView, toSoapNoteView } from "./views";
+import { negatedSpans } from "./text";
 import type { AgentInput, AgentResult, AgentStep, AgentStepName, DecisionSource, PatientContext, Vitals } from "./types";
 
 export class NotFoundError extends Error {}
@@ -41,19 +43,25 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   };
 
   const risk = evaluateRisk(ctx.vitals, [...storedFlags, text]);
-  step("risk", "Diagnostic risk scan", `Score ${risk.score}/100 · ${risk.level} · ${risk.flags.length} flags`, "rules");
+  step("risk", "Deterministic safety floor & risk scoring", `Score ${risk.score}/100 · floor ${risk.level} · ${risk.flags.length} flag(s)`, "rules");
 
   const triage = mergeTriage(ruleTriage(text, risk), await llmTriage(text, ctx, risk));
-  step("triage", "Severity triage", `${triage.level} → ${triage.department}`, triage.source);
-
-  const plan = planAppointment(triage.level, triage.department);
-  step("booking", "Auto-booking", `${plan.doctorName} · ${plan.department} · ${plan.scheduledAt.toISOString()} (${plan.status})`, "rules");
+  const negated = negatedSpans(text);
+  step(
+    "triage",
+    "Symptom & negation parsing → urgency",
+    `${triage.level} → ${triage.department}${negated.length ? ` · ignored negated: "${negated.join('", "')}"` : ""}`,
+    triage.source,
+  );
 
   const soap = mergeSoap(buildSoap(text, ctx, risk, triage), await llmSoap(text, ctx, risk, triage));
-  step("soap", "SOAP documentation", `${soap.icd10Codes.length} ICD-10 codes: ${soap.icd10Codes.join(", ")}`, soap.source);
+  step("soap", "Structured SOAP note + ICD-10 coding", `${soap.icd10Codes.length} code(s): ${soap.icd10Codes.join(", ")}`, soap.source);
+
+  const plan = planAppointment(triage.level, triage.department);
+  step("booking", "Autonomous specialist slot booking", `${plan.doctorName} · ${plan.department} · ${plan.status}`, "rules");
 
   // LLM calls are all done; keep the SQLite transaction short.
-  const { session, appt, note } = await prisma.$transaction(async (tx) => {
+  const { session, appt, note, updated } = await prisma.$transaction(async (tx) => {
     const session = await tx.triageSession.create({
       data: {
         patientId: patient.id,
@@ -79,7 +87,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         triageSessionId: session.id,
       },
     });
-    await tx.patient.update({
+    const updated = await tx.patient.update({
       where: { id: patient.id },
       data: {
         riskScore: Math.max(patient.riskScore, risk.score),
@@ -87,9 +95,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         ...(triage.level === "CRITICAL" ? { outcomeStatus: "Critical" } : {}),
       },
     });
-    return { session, appt, note };
+    return { session, appt, note, updated };
   });
-  step("persist", "Persist to record", "TriageSession + Appointment + SoapNote saved", "rules");
+  step("persist", "Persist to patient record", `Risk ${patient.riskScore} → ${updated.riskScore} · TriageSession + SoapNote + Appointment saved`, "rules");
 
   return {
     triageSessionId: session.id,
@@ -99,6 +107,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     appointment: toAppointmentView(appt),
     soap: toSoapNoteView(note),
     steps,
+    patientAfter: { previousRiskScore: patient.riskScore, riskScore: updated.riskScore, outcomeStatus: asOutcome(updated.outcomeStatus) },
     source: triage.source === "llm" || soap.source === "llm" ? "llm" : "rules",
   };
 }

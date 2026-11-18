@@ -141,6 +141,8 @@ export interface AgentResult {
   appointment: AppointmentView;
   soap: SoapNoteView;
   steps: AgentStep[];
+  /** Patient record after the run (riskScore only ever rises). */
+  patientAfter: { previousRiskScore: number; riskScore: number; outcomeStatus: OutcomeStatus };
   /** "llm" if any step used the LLM, else "rules". */
   source: DecisionSource;
 }

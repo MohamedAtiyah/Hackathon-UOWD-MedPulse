@@ -87,7 +87,7 @@ function formatVitals(v: PatientContext["vitals"]): string {
     v.wbc != null && `WBC ${v.wbc} ×10⁹/L`,
     v.lactate != null && `lactate ${v.lactate} mmol/L`,
   ].filter(Boolean);
-  return parts.length ? parts.join(", ") : "No vitals recorded.";
+  return parts.length ? `${parts.join(", ")}.` : "No vitals recorded.";
 }
 
 export function buildSoap(text: string, patient: PatientContext, risk: RiskAssessment, triage: TriageAssessment): SoapDraft {

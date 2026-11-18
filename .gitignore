@@ -50,3 +50,6 @@ next-env.d.ts
 
 # local agent session state (absolute paths, not project source)
 /.handoff/
+
+# Playwright MCP screenshots/snapshots
+/.playwright-mcp/

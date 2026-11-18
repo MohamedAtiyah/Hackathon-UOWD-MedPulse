@@ -8,3 +8,7 @@ const NEGATED_SPAN = /\b(?:no|denies|denied|without|negative for|free of|absence
 /** Remove negated clauses before keyword matching. */
 // shortcut: NegEx-style cue-to-punctuation scope only (no pseudo-negation, no double negatives), upgrade to a clinical NLP negation model for real use
 export const stripNegated = (text: string): string => text.replace(NEGATED_SPAN, " ");
+
+/** The negated phrases stripNegated removes, for the agent trace ("no wheeze today"). */
+export const negatedSpans = (text: string): string[] =>
+  (text.match(NEGATED_SPAN) ?? []).map((s) => s.trim()).filter(Boolean);

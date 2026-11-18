@@ -24,16 +24,18 @@ Tiers: **O** = Opus · **S** = Sonnet · **H** = Haiku. One owner per file. `∥
 
 Phase 1 extras (lead): `src/lib/views.ts` row mappers, `src/lib/llm.ts` (Anthropic SDK + zod structured output, approved deps), `src/lib/text.ts` negation stripping (fixes the "no wheeze" → HIGH bug found in the smoke test). `npm test`: 32/32.
 
-## Phase 2: API + UI (T+50 → T+85), all ∥
+## Phase 2: API + UI (T+50 → T+85), all ∥ ✅
 
 | ID | Task | Tier | Time | Owner | Depends |
 |----|------|------|------|-------|---------|
 | ✅ B2 | `runAgent` + `booking.ts` + `POST /api/agent` (validate: non-empty, ≤4k chars) | S | 20m | `src/lib/agent.ts`, `src/app/api/agent/` | B1 |
 | ✅ P | Patients + insights services; `GET/POST /api/patients`, `GET /api/patients/[id]`, `GET /api/insights` | S | 20m | `src/lib/patients.ts`, `src/lib/insights.ts`, `src/app/api/patients/`, `src/app/api/insights/` | A1 |
-| B3 | Agent UI: textarea + step-trace timeline + SOAP card | S | 20m | `src/app/agent/` | AgentResult frozen |
-| A2 | Command centre + patient detail with risk badges | S | 25m | `src/app/page.tsx`, `src/app/patients/` | A1 |
-| C2 | Insights dashboard (Tailwind/SVG bars) | S | 25m | `src/app/insights/` | C1 |
-| L1 | Nav + layout + disclaimer banner | H | 10m | `src/app/layout.tsx` | none |
+| ✅ B3 | Agent UI: textarea + step-trace timeline + SOAP card | S | 20m | `src/app/agent/` | AgentResult frozen |
+| ✅ A2 | Command centre + patient detail with risk badges | S | 25m | `src/app/page.tsx`, `src/app/patients/` | A1 |
+| ✅ C2 | Insights dashboard (Tailwind/SVG bars) | S | 25m | `src/app/insights/` | C1 |
+| ✅ L1 | Nav + layout + disclaimer banner | H | 10m | `src/app/layout.tsx` | none |
+
+Phase 2 notes (lead): L1 shell built first (`layout.tsx`, `loading.tsx`, `components/nav-links.tsx`, `components/ui.tsx`), then A2/B3/C2 by parallel Sonnet builders with one owner per route folder. `cacheComponents` is on: pages `await connection()` behind the root `loading.tsx` Suspense boundary; nav `usePathname` is Suspense-wrapped. Agent trace relabelled to the 4 demo stages + persist; `AgentResult.patientAfter` added. Verified in a browser at 1440px and 375px.
 
 ## Phase 3: Integrate + review (T+85 → T+105)
 
