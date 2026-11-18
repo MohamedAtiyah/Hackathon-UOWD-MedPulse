@@ -28,7 +28,8 @@ decision support for a clinician."*
 
 **0:15–0:45 · Requirement 1: diagnostic risk flagging.**
 1. On **Command Centre**, point at the stat tiles (**Patients 6**, **Critical**, **High risk ≥70**) and the list
-   sorted by risk. **Harold Brennan** is at the top (**CRITICAL**, risk 94: sepsis with lactate 4.2 and SBP 88).
+   sorted by risk. **Harold Brennan** is at the top (**CRITICAL**, risk bar **100**, small print *rules 100 · stored 94*:
+   sepsis with lactate 4.2 and SBP 88). Say: *"His chart says 94, but live vitals re-score him to 100 on every load."*
 2. Click the name **Priya Raman**. On her record, open **Live diagnostic flags · rules score …** and
    **Documented findings**: *"Imaging red flag: fundus photo shows neovascularization of the disc
    (proliferative DR)"*.
@@ -44,8 +45,8 @@ decision support for a clinician."*
    3. *Structured SOAP note + ICD-10 coding*: **A41.9, R65.20, R30.0**.
    4. *Autonomous specialist slot booking*: **Dr. Elena Vasquez · Critical Care · Confirmed**.
    5. *Persist to patient record*: **Risk 94 → 100**.
-4. Point at the summary row (**Risk 94 → 100**, **Critical**), the **Booked appointment** card (**Auto-booked**)
-   and the **SOAP note** card.
+4. Point at the summary row (**Risk 94 → 100**, **Critical**): the agent writes the live score back to his stored
+   record. Then the **Booked appointment** card (**Auto-booked**) and the **SOAP note** card.
 5. Click **Routine Follow-up** (Sofia Alvarez), then **Run triage agent**. The result is **LOW → Primary Care**.
    The trace reads *ignored negated: "no wheeze today"*, and **Dr. Grace Mensah** is booked about a week out
    (**Scheduled**), with code **J45.909**. Say: *"Same pipeline, opposite urgency. It understands 'no wheeze',
@@ -66,6 +67,11 @@ escalate, but it can never lower urgency. Every decision shows its reasoning."*
 
 ## Backup lines
 
+- **Biggest live escalation (typed, ~15 s, use instead of step 6):** in **Patient**, select **Kenji Watanabe**
+  (LOW, 24). Type: *Crushing chest pain radiating to my left arm for 30 minutes, sweating. ECG shows ST elevation
+  in II, III, aVF.* → **Run triage agent**. Result: **CRITICAL → Cardiology**, **Risk 24 → 70**. Back on
+  **Command Centre** he jumps from LOW to CRITICAL in the ranked list. Say: *"The ECG finding in free text hit the
+  safety floor."*
 - **Chest Pain / ACS Triage** (Daniel Okafor): **CRITICAL → Cardiology**, **Dr. Marcus Chen**, **I21.9**. His
   stored risk is already 88, so the risk number stays at 88.
 - **Respiratory Deterioration** (Margaret Lindqvist): **CRITICAL → Pulmonology**, **Dr. Thomas Byrne**. The trace
