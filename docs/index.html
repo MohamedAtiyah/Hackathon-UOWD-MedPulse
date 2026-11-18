@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedPulse AI · Interactive Demo</title>
+<meta name="description" content="Interactive, in-browser demo of MedPulse AI: risk-ranked patients, an agentic triage trace with SOAP + ICD-10 and auto-booking, and outcome insights. Synthetic data only.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M5 17h6l3-7 4 12 3-5h6' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: { fontFamily: {
+    sans: ['Geist', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+    mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] } } } };
+</script>
+<style>
+  html { -webkit-font-smoothing: antialiased; color-scheme: light; }
+  body {
+    background-color: #fafafa;
+    background-image:
+      radial-gradient(60rem 28rem at 50% -8%, rgb(153 246 228 / 0.32), transparent 70%),
+      radial-gradient(rgb(24 24 27 / 0.07) 1px, transparent 1px);
+    background-size: auto, 22px 22px;
+    background-repeat: no-repeat, repeat;
+  }
+  :where(a, button, select, textarea):focus-visible { outline: 2px solid #0d9488; outline-offset: 2px; border-radius: .5rem; }
+  ::selection { background: #ccfbf1; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  .rise { animation: rise .35s ease-out both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body class="flex min-h-screen flex-col font-sans text-zinc-900">
+
+<div role="note" class="border-b border-amber-200/70 bg-amber-50/80 px-4 py-1.5 text-center text-xs leading-relaxed text-amber-900">
+  <strong class="font-semibold">Clinical decision support, not a diagnosis.</strong>
+  All patients are synthetic. Every flag, triage level and SOAP draft requires clinician review.
+</div>
+
+<header class="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/85 backdrop-blur-md">
+  <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <a href="#" class="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-zinc-900" data-tab-link="home">
+      <span class="grid size-8 place-items-center rounded-lg bg-teal-600 text-white shadow-sm ring-1 ring-inset ring-white/20">
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+      </span>
+      MedPulse <span class="text-teal-600">AI</span>
+      <span class="relative ml-0.5 flex size-2" aria-hidden="true">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
+        <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+      </span>
+    </a>
+    <nav aria-label="Primary" role="tablist" class="grid w-full grid-cols-3 gap-1 sm:flex sm:w-auto" id="tabs"></nav>
+  </div>
+</header>
+
+<div class="mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6">
+  <p class="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-teal-200/80 bg-teal-50/80 px-3 py-1 text-xs font-medium text-teal-800">
+    <span class="font-semibold">Interactive GitHub Pages Demo</span>
+    <span aria-hidden="true">·</span>
+    <span>Full Next.js + Prisma + OpenAI source in repo</span>
+  </p>
+</div>
+
+<main id="app" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6"></main>
+
+<footer class="border-t border-zinc-200/80 bg-white px-4 py-4 text-center text-xs leading-relaxed text-zinc-600">
+  This page is a self-contained, client-side port of MedPulse's deterministic rule engine (safety floor, negation-aware triage, ICD-10, SOAP, booking).
+  No server, no LLM, no data leaves your browser. Rules are the safety floor; the LLM in the full app can escalate but never downgrade urgency.
+  <a class="font-medium text-teal-700 underline underline-offset-4" href="https://github.com/MohamedAtiyah/Hackathon-UOWD-Unnamed">Source on GitHub</a>
+</footer>
+
+<script>
+"use strict";
+/* ───────────────────────── Rule engine (port of src/lib/{risk,text,triage,soap,booking}.ts) ───────────────────────── */
+const RANK = { LOW: 0, MODERATE: 1, HIGH: 2, CRITICAL: 3 };
+const maxLevel = (...l) => l.reduce((a, b) => (RANK[b] > RANK[a] ? b : a), "LOW");
+const scoreLevel = (s) => (s >= 70 ? "CRITICAL" : s >= 40 ? "HIGH" : s >= 20 ? "MODERATE" : "LOW");
+const WEIGHT = { CRITICAL: 70, HIGH: 40, MODERATE: 20, LOW: 5 };
+const ok = (n) => typeof n === "number" && Number.isFinite(n);
+
+// Negation: a cue opens a span that ends at punctuation, "but" or "and" ("not" excluded: "could not breathe" is positive).
+const NEGATED = /\b(?:no|denies|denied|without|negative for|free of|absence of)\b[^.;,!?\n]*?(?=[.;,!?\n]|\b(?:but|and)\b|$)/gi;
+const stripNegated = (t) => t.replace(NEGATED, " ");
+const negatedSpans = (t) => (t.match(NEGATED) || []).map((s) => s.trim()).filter(Boolean);
+
+function vitalFlags(v) {
+  const flags = [];
+  const add = (category, severity, label, reason) => flags.push({ category, severity, label, reason });
+  const { hr, sbp, dbp, spo2, temp, wbc, lactate } = v;
+  const sirs = [];
+  if (ok(temp) && (temp > 38.3 || temp < 36)) sirs.push(`Temp ${temp} °C`);
+  if (ok(hr) && hr > 90) sirs.push(`HR ${hr} bpm > 90`);
+  if (ok(wbc) && (wbc > 12 || wbc < 4)) sirs.push(`WBC ${wbc} ×10⁹/L`);
+  let sepsisRaised = false;
+  if (sirs.length >= 2) {
+    const hypo = [];
+    if (ok(sbp) && sbp <= 100) hypo.push(`SBP ${sbp} mmHg ≤ 100`);
+    if (ok(lactate) && lactate >= 2) hypo.push(`Lactate ${lactate} mmol/L ≥ 2`);
+    sepsisRaised = true;
+    if (hypo.length) {
+      const crit = (ok(lactate) && lactate >= 4) || (ok(sbp) && sbp < 90);
+      add("SEPSIS", crit ? "CRITICAL" : "HIGH", "Sepsis risk", `SIRS proxy ${sirs.length}/3 (${sirs.join("; ")}) with hypoperfusion (${hypo.join("; ")})`);
+    } else add("SEPSIS", "MODERATE", "SIRS criteria met", `SIRS proxy ${sirs.length}/3 (${sirs.join("; ")})`);
+  }
+  if (!sepsisRaised && ok(temp) && (temp >= 39.5 || temp < 35)) add("SEPSIS", "MODERATE", "Temperature derangement", `Temp ${temp} °C outside 35–39.5`);
+  if (ok(hr)) {
+    if (hr > 120) add("CARDIAC", "HIGH", "Tachycardia", `HR ${hr} bpm > 120`);
+    else if (hr < 45) add("CARDIAC", "HIGH", "Bradycardia", `HR ${hr} bpm < 45`);
+    else if (hr > 100) add("CARDIAC", "MODERATE", "Tachycardia", `HR ${hr} bpm > 100`);
+  }
+  if ((ok(sbp) && sbp >= 180) || (ok(dbp) && dbp >= 120)) add("CARDIAC", "HIGH", "Hypertensive crisis range", `BP ${sbp ?? "?"}/${dbp ?? "?"} mmHg (SBP ≥ 180 or DBP ≥ 120)`);
+  if (ok(sbp) && sbp < 90) add("CARDIAC", "HIGH", "Hypotension", `SBP ${sbp} mmHg < 90`);
+  if (ok(spo2)) {
+    if (spo2 < 88) add("RESPIRATORY", "CRITICAL", "Respiratory distress / hypoxemia", `SpO2 ${spo2}% < 88`);
+    else if (spo2 < 92) add("RESPIRATORY", "HIGH", "Respiratory distress / hypoxemia", `SpO2 ${spo2}% < 92`);
+    else if (spo2 <= 94) add("RESPIRATORY", "MODERATE", "Borderline oxygenation", `SpO2 ${spo2}% in 92–94`);
+  }
+  if (ok(lactate)) {
+    if (lactate >= 4) add("LAB", "CRITICAL", "Severe hyperlactatemia", `Lactate ${lactate} mmol/L ≥ 4`);
+    else if (lactate >= 2) add("LAB", "HIGH", "Elevated lactate", `Lactate ${lactate} mmol/L ≥ 2`);
+  }
+  if (ok(wbc)) {
+    if (wbc > 15 || wbc < 3) add("LAB", "HIGH", "Leukocyte abnormality", `WBC ${wbc} ×10⁹/L outside 3–15`);
+    else if (wbc > 12) add("LAB", "MODERATE", "Leukocytosis", `WBC ${wbc} ×10⁹/L > 12`);
+  }
+  return flags;
+}
+
+const FINDING_RULES = [
+  { category: "CARDIAC", severity: "CRITICAL", label: "Acute coronary syndrome marker", re: /st[- ]?elevation|\bstemi\b|troponin/i },
+  { category: "CARDIAC", severity: "HIGH", label: "Arrhythmia / ischemic ECG change", re: /arrhythmia|atrial fibrillation|\bafib\b|st[- ]?depression|bundle branch block/i },
+  { category: "IMAGING", severity: "CRITICAL", label: "Critical imaging finding", re: /pneumothorax|intracranial (hemorrhage|haemorrhage|bleed)|aortic dissection/i },
+  { category: "IMAGING", severity: "HIGH", label: "Imaging red flag", re: /neovasculari[sz]ation|proliferative|retinal (hemorrhage|haemorrhage)|consolidation|pulmonary (nodule|mass)|infarct/i, skipIfCritImaging: true },
+  { category: "LAB", severity: "MODERATE", label: "Poor glycaemic control", re: /hba1c\D{0,5}(\d+(?:\.\d+)?)/i },
+  { category: "RESPIRATORY", severity: "HIGH", label: "Respiratory distress (reported)", re: /respiratory distress|accessory muscle|can'?t finish sentences|unable to (speak|complete sentences)/i },
+];
+function findingFlags(findings) {
+  const flags = [];
+  for (const rule of FINDING_RULES) {
+    for (const raw of findings) {
+      if (typeof raw !== "string") continue;
+      const text = stripNegated(raw);
+      if (rule.skipIfCritImaging && FINDING_RULES[2].re.test(text)) continue;
+      const m = rule.re.exec(text);
+      if (!m) continue;
+      if (rule.label === "Poor glycaemic control" && !(parseFloat(m[1]) >= 9)) continue;
+      flags.push({ category: rule.category, severity: rule.severity, label: rule.label, reason: `Matched "${m[0]}"` });
+      break;
+    }
+  }
+  return flags;
+}
+function evaluateRisk(vitals, findings = []) {
+  const flags = [...vitalFlags(vitals || {}), ...findingFlags(findings)].sort((a, b) => RANK[b.severity] - RANK[a.severity]);
+  if (!flags.length) return { score: 0, level: "LOW", flags };
+  const worst = new Map();
+  for (const f of flags) worst.set(f.category, Math.max(worst.get(f.category) ?? 0, WEIGHT[f.severity]));
+  const w = [...worst.values()].sort((a, b) => b - a);
+  const rest = w.slice(1).reduce((s, x) => s + x, 0);
+  return { score: Math.min(100, Math.round(w[0] + 0.5 * rest)), level: maxLevel(...flags.map((f) => f.severity)), flags };
+}
+
+const cue = (level, department, label, ...tests) => ({ level, department, label, tests });
+const CUES = [
+  cue("CRITICAL", "Cardiology", "Acute coronary syndrome pattern", /chest (pain|pressure|tightness)|crushing/i, /radiat|jaw|left arm|sweat|diaphore|nause|short of breath/i),
+  cue("CRITICAL", "Neurology", "Stroke warning signs (FAST)", /facial droop|slurred speech|one-sided weakness|arm weakness|sudden confusion and weakness/i),
+  cue("CRITICAL", "Critical Care", "Suspected sepsis", /confus|drowsy|altered/i, /fever|febrile|rigors|chills/i),
+  cue("CRITICAL", "Emergency Medicine", "Anaphylaxis", /anaphyla|throat (swelling|closing)|tongue swelling/i),
+  cue("CRITICAL", "Emergency Medicine", "Unresponsive / seizure", /unresponsive|seizure|convuls/i),
+  cue("CRITICAL", "Pulmonology", "Severe respiratory distress", /(?:can'?t|cannot|unable to) (?:breathe|speak|finish sentences)|cyanos|blue lips|lips (?:are |going |turning )?blue/i),
+  cue("HIGH", "Cardiology", "Chest pain", /chest pain|chest tightness/i),
+  cue("HIGH", "Cardiology", "Syncope / palpitations", /syncope|faint|passed out|palpitation/i),
+  cue("HIGH", "Pulmonology", "Dyspnea", /short(ness)? of breath|breathless|dyspn|wheez/i),
+  cue("HIGH", "Ophthalmology", "Acute visual change", /vision loss|blurred vision|blurry vision|floaters|curtain/i),
+  cue("HIGH", "Gastroenterology", "GI bleed", /(vomit|cough)ing blood|blood in (stool|vomit)|black stool|melena|hematemesis/i),
+  cue("HIGH", "Emergency Medicine", "Severe pain", /severe (abdominal|head|back) pain|worst headache/i),
+  cue("MODERATE", "Infectious Disease", "Fever", /fever|febrile|rigors/i),
+  cue("MODERATE", "Primary Care", "Urinary symptoms", /dysuria|burning (on|when) urinat|urinary/i),
+  cue("MODERATE", "Endocrinology", "Glycaemic issue", /high (blood )?sugar|hyperglyc|glucose (is )?high|hypoglyc/i),
+  cue("MODERATE", "Orthopedics", "Musculoskeletal / wound", /knee|hip|joint pain|fracture|wound|incision/i),
+  cue("MODERATE", "Primary Care", "Cough / vomiting", /cough|vomit/i),
+  cue("LOW", "Primary Care", "Routine request", /refill|follow[- ]?up|routine|check[- ]?up|prescription/i),
+];
+function departmentFromFlag(f) {
+  switch (f.category) {
+    case "SEPSIS": return f.severity === "CRITICAL" ? "Critical Care" : "Infectious Disease";
+    case "CARDIAC": return "Cardiology";
+    case "RESPIRATORY": return "Pulmonology";
+    case "LAB": return "Primary Care";
+    default: return /retin|fundus|neovasc|macul|disc/i.test(`${f.reason} ${f.label}`) ? "Ophthalmology" : "Emergency Medicine";
+  }
+}
+function ruleTriage(text, risk) {
+  const clean = stripNegated(text);
+  const matched = CUES.filter((c) => c.tests.every((t) => t.test(clean)));
+  const best = matched[0];
+  const level = maxLevel(best?.level ?? "LOW", risk.level);
+  const topFlag = risk.flags.reduce((a, f) => (!a || RANK[f.severity] > RANK[a.severity] ? f : a), undefined);
+  const riskDominates = !best || RANK[risk.level] > RANK[best.level];
+  const department = riskDominates && topFlag ? departmentFromFlag(topFlag) : best?.department ?? "Primary Care";
+  const flaggedRisks = [...new Set([...matched.map((c) => c.label), ...risk.flags.map((f) => f.label)])];
+  const cueText = matched.length ? `Text cues: ${matched.map((c) => `${c.label} (${c.level})`).join(", ")}.` : "No urgent text cues.";
+  const riskText = risk.flags.length ? `Risk engine ${risk.score}/100 (${risk.level}): ${risk.flags.slice(0, 3).map((f) => f.label).join(", ")}.` : `Risk engine ${risk.score}/100 (${risk.level}), no flags.`;
+  return { level, department, flaggedRisks, reasoning: `${cueText} ${riskText} Final: ${level} → ${department}` };
+}
+
+const sepsisSeverity = (r) => r.flags.find((f) => f.category === "SEPSIS")?.severity;
+const hasFlag = (r, cat, sev) => r.flags.some((f) => f.category === cat && f.severity === sev);
+const isSepsis = (t, r) => /sepsis|septic/i.test(t) || ["HIGH", "CRITICAL"].includes(sepsisSeverity(r));
+const isMI = (t, r) => /st[- ]?elevation|\bstemi\b|troponin|myocardial infarction/i.test(t) || r.flags.some((f) => f.label === "Acute coronary syndrome marker");
+const rx = (p) => (t) => p.test(t);
+const ICD10 = [
+  ["I21.9", "Acute myocardial infarction, unspecified", isMI],
+  ["R07.9", "Chest pain, unspecified", (t, r) => /chest pain|chest tightness/i.test(t) && !isMI(t, r)],
+  ["A41.9", "Sepsis, unspecified organism", isSepsis],
+  ["R65.20", "Severe sepsis without septic shock", (_t, r) => sepsisSeverity(r) === "CRITICAL"],
+  ["J44.1", "COPD with acute exacerbation", rx(/copd/i)],
+  ["J45.901", "Asthma with acute exacerbation", (t) => /asthma/i.test(t) && /attack|exacerbat|flare|wheez/i.test(t)],
+  ["J45.909", "Asthma, uncomplicated", (t) => /asthma/i.test(t) && !/attack|exacerbat|flare|wheez/i.test(t)],
+  ["R06.00", "Dyspnea, unspecified", rx(/short(ness)? of breath|breathless|dyspn/i)],
+  ["R09.02", "Hypoxemia", (_t, r) => hasFlag(r, "RESPIRATORY", "CRITICAL")],
+  ["R50.9", "Fever, unspecified", (t, r) => /fever|febrile|rigors/i.test(t) && !isSepsis(t, r)],
+  ["R05.9", "Cough, unspecified", rx(/cough/i)],
+  ["R30.0", "Dysuria", rx(/dysuria|burning (on|when) urinat/i)],
+  ["N39.0", "Urinary tract infection, site not specified", rx(/\buti\b|urinary tract infection/i)],
+  ["R10.9", "Unspecified abdominal pain", rx(/abdominal pain|stomach pain|belly pain/i)],
+  ["R11.2", "Nausea with vomiting, unspecified", rx(/vomit/i)],
+  ["R51.9", "Headache, unspecified", rx(/headache/i)],
+  ["R55", "Syncope and collapse", rx(/syncope|faint|passed out/i)],
+  ["R00.2", "Palpitations", rx(/palpitation/i)],
+  ["R29.810", "Facial weakness", rx(/facial droop|facial weakness/i)],
+  ["R47.81", "Slurred speech", rx(/slurred speech/i)],
+  ["E11.319", "Type 2 diabetes with unspecified diabetic retinopathy without macular edema", (t) => /diabet/i.test(t) && /retinopathy|neovasc/i.test(t)],
+  ["R73.9", "Hyperglycemia, unspecified", rx(/hyperglyc|high (blood )?sugar/i)],
+  ["I10", "Essential (primary) hypertension", rx(/hypertension|high blood pressure/i)],
+  ["M25.569", "Pain in unspecified knee", rx(/knee pain/i)],
+  ["R21", "Rash and other nonspecific skin eruption", rx(/\brash\b/i)],
+  ["R56.9", "Unspecified convulsions", rx(/seizure|convuls/i)],
+].map(([code, description, test]) => ({ code, description, test }));
+function icd10ForText(text, risk) {
+  const clean = stripNegated(text);
+  const codes = ICD10.filter((e) => e.test(clean, risk)).map((e) => e.code).slice(0, 6);
+  return codes.length ? codes : ["R69"];
+}
+const PLANS = {
+  "Critical Care": "Sepsis Hour-1 bundle: blood cultures before antibiotics, broad-spectrum IV antibiotics, 30 mL/kg crystalloid if hypotensive or lactate ≥4, repeat lactate within 2–4 h, vasopressors if MAP <65 after fluids.",
+  Cardiology: "12-lead ECG within 10 min, serial hs-troponin, aspirin 300 mg unless contraindicated, ACS pathway/cath lab activation if STEMI.",
+  Pulmonology: "Oxygen to SpO₂ 88–92% if COPD (94–98% otherwise), bronchodilators, ABG, chest X-ray, systemic steroids for exacerbation.",
+  Neurology: "Activate stroke pathway, document time last known well, urgent CT head, check glucose, assess thrombolysis/thrombectomy window.",
+  Ophthalmology: "Dilated fundus exam, urgent retina referral, optimise glucose and blood pressure.",
+  "Infectious Disease": "Source identification (cultures, urinalysis, chest X-ray as indicated), targeted antimicrobials, hydration, monitor for deterioration.",
+  Endocrinology: "Check capillary and serum glucose, ketones if hyperglycaemic, review insulin/medication regimen, hydration, specialist input.",
+  Gastroenterology: "Assess haemodynamics, IV access, FBC/coagulation/group and save, PPI, urgent endoscopy if bleeding suspected.",
+  Orthopedics: "Examine and image the affected site, analgesia, wound care/tetanus status, immobilise as needed, orthopaedic review.",
+  "Emergency Medicine": "ABCDE assessment, IV access, monitoring, analgesia, targeted investigations, escalate to the appropriate specialty.",
+  "Primary Care": "Symptomatic care, medication review, safety-net advice (return or call emergency services if symptoms worsen).",
+};
+const TIMING = { CRITICAL: "Immediate review (≤30 min).", HIGH: "Review within 2 h.", MODERATE: "Review within 24 h.", LOW: "Routine review within 7 days." };
+const DISCLAIMER = "Clinical decision-support draft — requires clinician review and signature.";
+function formatVitals(v) {
+  const p = [
+    v.hr != null && `HR ${v.hr} bpm`,
+    v.sbp != null && v.dbp != null ? `BP ${v.sbp}/${v.dbp} mmHg` : v.sbp != null && `SBP ${v.sbp} mmHg`,
+    v.spo2 != null && `SpO₂ ${v.spo2}% RA`, v.temp != null && `T ${v.temp} °C`,
+    v.wbc != null && `WBC ${v.wbc} ×10⁹/L`, v.lactate != null && `lactate ${v.lactate} mmol/L`,
+  ].filter(Boolean);
+  return p.length ? `${p.join(", ")}.` : "No vitals recorded.";
+}
+function buildSoap(text, pt, risk, triage) {
+  const codes = icd10ForText(`${text} ${pt.chronic.join(" ")}`, risk);
+  const impression = codes.map((c) => `${ICD10.find((e) => e.code === c)?.description ?? "Unspecified symptom"} (${c})`).join("; ");
+  const riskText = risk.flags.length ? risk.flags.map((f) => `${f.label} (${f.severity}): ${f.reason}`).join("; ") : "no rule-based red flags";
+  return {
+    subjective: `${pt.age}-year-old ${pt.gender.toLowerCase()} with ${pt.chronic.join(", ") || "no documented chronic conditions"}. Presenting complaint (patient/clinician words): "${text}"`,
+    objective: `${formatVitals(pt.vitals)} Risk engine: score ${risk.score}/100; ${riskText}`,
+    assessment: `Triage ${triage.level} → ${triage.department}. Key risks: ${triage.flaggedRisks.join(", ") || "none"}. Working impression: ${impression}.`,
+    plan: `${PLANS[triage.department]} ${TIMING[triage.level]} ${DISCLAIMER}`,
+    icd10Codes: codes,
+  };
+}
+const ROSTER = { "Critical Care": "Dr. Elena Vasquez", "Emergency Medicine": "Dr. Samuel Okafor", Cardiology: "Dr. Marcus Chen", Pulmonology: "Dr. Thomas Byrne", Neurology: "Dr. Priya Raman", "Infectious Disease": "Dr. Lucas Ferreira", Endocrinology: "Dr. Hannah Weiss", Ophthalmology: "Dr. Aisha Rahman", Gastroenterology: "Dr. Daniel Kwon", Orthopedics: "Dr. Sofia Marchetti", "Primary Care": "Dr. Grace Mensah" };
+const OFFSETS = { CRITICAL: [30, "Confirmed"], HIGH: [120, "Confirmed"], MODERATE: [1440, "Scheduled"], LOW: [10080, "Scheduled"] };
+function planAppointment(level, department, now = new Date()) {
+  const [min, status] = OFFSETS[level];
+  const q = 15 * 60000;
+  return { doctorName: ROSTER[department], department, scheduledAt: new Date(Math.ceil((now.getTime() + min * 60000) / q) * q), status };
+}
+
+/* ───────────────────────── Seed data (mirrors prisma/seed.ts) ───────────────────────── */
+const SEED = [
+  { id: "p1", cohort: "Sepsis", mrn: "MRN-100231", name: "Harold Brennan", age: 68, gender: "Male", blood: "A+", chronic: ["Type 2 diabetes mellitus", "CKD stage 3a", "Benign prostatic hyperplasia"], vitals: { hr: 124, sbp: 88, dbp: 52, spo2: 92, temp: 39.4, wbc: 18.6, lactate: 4.2 }, stored: 94, flagged: ["Sepsis risk: SIRS 3/4 + hypotension (SBP 88), qSOFA ≥2", "Lactate 4.2 mmol/L (≥4): tissue hypoperfusion", "Leukocytosis WBC 18.6 ×10⁹/L"], outcome: "Critical" },
+  { id: "p2", cohort: "Acute Coronary Syndrome", mrn: "MRN-100458", name: "Daniel Okafor", age: 57, gender: "Male", blood: "O+", chronic: ["Hypertension", "Hyperlipidemia", "Active smoker (30 pack-years)"], vitals: { hr: 108, sbp: 158, dbp: 94, spo2: 95, temp: 36.9, wbc: 9.8, lactate: 1.6 }, stored: 88, flagged: ["Cardiac anomaly: ST elevation II, III, aVF (inferior STEMI pattern)", "Lab red flag: hs-troponin I 1,240 ng/L (>99th percentile)", "Tachycardia HR 108"], outcome: "Improving" },
+  { id: "p3", cohort: "Diabetic Retinopathy", mrn: "MRN-100517", name: "Priya Raman", age: 49, gender: "Female", blood: "B+", chronic: ["Type 2 diabetes mellitus (12 yrs)", "Hypertension"], vitals: { hr: 82, sbp: 146, dbp: 88, spo2: 98, temp: 36.7, wbc: 7.2, lactate: 1.1 }, stored: 62, flagged: ["Imaging red flag: fundus photo shows neovascularization of the disc, both eyes (proliferative DR)", "Lab red flag: HbA1c 9.8%", "Stage 2 hypertension BP 146/88"], outcome: "Stable" },
+  { id: "p4", cohort: "COPD Exacerbation", mrn: "MRN-100602", name: "Margaret Lindqvist", age: 72, gender: "Female", blood: "AB-", chronic: ["COPD GOLD 3", "Heart failure with preserved EF", "Former smoker"], vitals: { hr: 112, sbp: 138, dbp: 82, spo2: 86, temp: 37.8, wbc: 13.1, lactate: 2.1 }, stored: 81, flagged: ["Respiratory distress: SpO₂ 86% on room air", "Readmission within 30 days (COPD exacerbation)", "Leukocytosis WBC 13.1 ×10⁹/L: possible infective trigger"], outcome: "Readmitted" },
+  { id: "p5", cohort: null, mrn: "MRN-100744", name: "Sofia Alvarez", age: 34, gender: "Female", blood: "O-", chronic: ["Mild persistent asthma"], vitals: { hr: 74, sbp: 118, dbp: 76, spo2: 99, temp: 36.6, wbc: 6.4, lactate: 0.9 }, stored: 12, flagged: [], outcome: "Stable" },
+  { id: "p6", cohort: null, mrn: "MRN-100819", name: "Kenji Watanabe", age: 63, gender: "Male", blood: "A-", chronic: ["Osteoarthritis", "Hypertension (controlled)"], vitals: { hr: 78, sbp: 128, dbp: 80, spo2: 97, temp: 37.1, wbc: 8.1, lactate: 1.0 }, stored: 24, flagged: ["Post-op day 10, right total knee arthroplasty: monitor wound and DVT signs"], outcome: "Improving" },
+];
+const METRICS = [
+  { cohort: "Sepsis", protocol: "SEP-1 Hour-1 Bundle", recovery: 78.4, los: 7.2, readmit: 19.6, n: 212 },
+  { cohort: "Acute Coronary Syndrome", protocol: "Primary PCI (D2B <90 min)", recovery: 94.1, los: 3.4, readmit: 11.8, n: 168 },
+  { cohort: "COPD Exacerbation", protocol: "GOLD Bundle + Pulmonary Rehab", recovery: 81.3, los: 5.1, readmit: 22.7, n: 143 },
+  { cohort: "Heart Failure", protocol: "GDMT Titration + Transitional Care", recovery: 84.0, los: 4.6, readmit: 18.9, n: 176 },
+  { cohort: "Diabetic Retinopathy", protocol: "Anti-VEGF + PRP", recovery: 86.5, los: 0.3, readmit: 6.2, n: 94 },
+];
+const PRESETS = [
+  { title: "Acute Sepsis Escalation", patient: "p1", dot: "bg-red-500", text: "68M, 2 days of dysuria and flank pain, now confused with fever and rigors. Wife says he's barely passing urine." },
+  { title: "Acute Cardiac Event", patient: "p2", dot: "bg-red-500", text: "Crushing central chest pain radiating to my left jaw for 40 minutes, sweating and nauseous." },
+  { title: "Routine Follow-up", patient: "p5", dot: "bg-emerald-500", text: "Need a refill of my asthma inhaler, routine follow-up, no wheeze today." },
+];
+const SEEDED_RUNS = 3;
+
+/* ───────────────────────── State ───────────────────────── */
+const state = { tab: "home", patients: structuredClone(SEED), runs: [], draft: { patient: "p1", text: "" }, result: null, error: null };
+
+const view = (p) => {
+  const risk = evaluateRisk(p.vitals, p.flagged);
+  const eff = Math.max(p.stored, risk.score);
+  return { ...p, risk, eff, level: maxLevel(risk.level, scoreLevel(eff)) };
+};
+const ranked = () => state.patients.map(view).sort((a, b) => b.eff - a.eff || a.name.localeCompare(b.name));
+
+function runAgent(patientId, text) {
+  const p = state.patients.find((x) => x.id === patientId);
+  const steps = [];
+  let t = performance.now();
+  const step = (label, detail) => { const n = performance.now(); steps.push({ label, detail, ms: Math.round(n - t) }); t = n; };
+  const risk = evaluateRisk(p.vitals, [...p.flagged, text]);
+  step("Deterministic safety floor & risk scoring", `Score ${risk.score}/100 · floor ${risk.level} · ${risk.flags.length} flag(s)`);
+  const triage = ruleTriage(text, risk);
+  const neg = negatedSpans(text);
+  step("Symptom & negation parsing → urgency", `${triage.level} → ${triage.department}${neg.length ? ` · ignored negated: "${neg.join('", "')}"` : ""}`);
+  const soap = buildSoap(text, p, risk, triage);
+  step("Structured SOAP note + ICD-10 coding", `${soap.icd10Codes.length} code(s): ${soap.icd10Codes.join(", ")}`);
+  const appt = planAppointment(triage.level, triage.department);
+  step("Autonomous specialist slot booking", `${appt.doctorName} · ${appt.department} · ${appt.status}`);
+  const before = p.stored;
+  p.stored = Math.max(p.stored, risk.score);
+  p.flagged = [...new Set([...p.flagged, ...risk.flags.map((f) => `${f.label}: ${f.reason}`)])];
+  if (triage.level === "CRITICAL") p.outcome = "Critical";
+  step("Persist to patient record", `Risk ${before} → ${p.stored} · TriageSession + SoapNote + Appointment saved (in this browser tab)`);
+  state.runs.unshift({ patientName: p.name, level: triage.level, department: triage.department });
+  return { patientId, risk, triage, soap, appt, steps, before, after: p.stored, outcome: p.outcome };
+}
+
+/* ───────────────────────── Rendering helpers ───────────────────────── */
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const SEV = {
+  CRITICAL: { badge: "bg-red-50 text-red-700 ring-red-600/20", dot: "bg-red-500", bar: "bg-red-500", text: "text-red-700", edge: "border-l-red-500" },
+  HIGH: { badge: "bg-orange-50 text-orange-700 ring-orange-600/20", dot: "bg-orange-500", bar: "bg-orange-500", text: "text-orange-700", edge: "border-l-orange-500" },
+  MODERATE: { badge: "bg-amber-50 text-amber-800 ring-amber-600/20", dot: "bg-amber-400", bar: "bg-amber-400", text: "text-amber-800", edge: "border-l-amber-400" },
+  LOW: { badge: "bg-emerald-50 text-emerald-700 ring-emerald-600/20", dot: "bg-emerald-500", bar: "bg-emerald-500", text: "text-emerald-700", edge: "border-l-emerald-500" },
+};
+const OUTCOME = { Critical: "bg-red-50 text-red-700 ring-red-600/20", Readmitted: "bg-purple-50 text-purple-700 ring-purple-600/20", Stable: "bg-sky-50 text-sky-700 ring-sky-600/20", Improving: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" };
+const CARD = "rounded-xl border border-zinc-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-md";
+const sevBadge = (l) => `<span class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide ring-1 ring-inset ${SEV[l].badge}"><span class="size-1.5 rounded-full ${SEV[l].dot}" aria-hidden="true"></span>${l}</span>`;
+const outBadge = (s) => `<span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${OUTCOME[s]}">${s}</span>`;
+const srcBadge = `<span title="Deterministic rule engine" class="inline-flex rounded-md bg-zinc-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-zinc-600 ring-1 ring-inset ring-zinc-500/20">Rules</span>`;
+const riskBar = (score) => { const s = SEV[scoreLevel(score)]; return `<div class="flex items-center gap-2"><div class="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-inset ring-zinc-200/60" role="meter" aria-label="Risk score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${score}"><div class="h-full rounded-full transition-[width] duration-500 ease-out ${s.bar}" style="width:${Math.min(100, score)}%"></div></div><span class="w-8 text-right text-sm font-semibold tabular-nums ${s.text}">${score}</span></div>`; };
+const card = (title, body, { action = "", cls = "" } = {}) => `<section class="${CARD} ${cls}">${title || action ? `<header class="flex items-center justify-between gap-3 rounded-t-xl border-b border-zinc-200/70 bg-zinc-50/60 px-5 py-3"><h2 class="text-sm font-semibold tracking-tight text-zinc-900">${title}</h2>${action}</header>` : ""}<div class="p-5">${body}</div></section>`;
+const tile = (label, value, tone = "text-zinc-900", hint = "") => `<div class="${CARD} p-4"><p class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">${label}</p><p class="mt-1.5 text-3xl font-semibold tracking-tight tabular-nums ${tone}">${value}</p>${hint ? `<p class="mt-1 text-xs text-zinc-600">${hint}</p>` : ""}</div>`;
+const pageHeader = (title, sub, extra = "") => `<div class="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8"><div><h1 class="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px] sm:leading-9">${title}</h1><p class="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-600">${sub}</p></div>${extra}</div>`;
+const fmtDate = (d) => new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(d) + " UTC";
+const VITALS = [["HR", (v) => v.hr, (v) => v.hr < 50 || v.hr > 100], ["BP", (v) => `${v.sbp}/${v.dbp}`, (v) => v.sbp < 90 || v.sbp > 179 || v.dbp >= 120], ["SpO₂", (v) => v.spo2, (v) => v.spo2 < 92], ["Temp", (v) => v.temp, (v) => v.temp < 36 || v.temp > 38.3], ["WBC", (v) => v.wbc, (v) => v.wbc < 4 || v.wbc > 12], ["Lactate", (v) => v.lactate, (v) => v.lactate >= 2]];
+const vitalsGrid = (v) => `<dl class="grid grid-cols-3 gap-2 sm:grid-cols-6">${VITALS.map(([l, val, bad]) => { const b = bad(v); return `<div class="rounded-lg border px-2.5 py-1.5 ${b ? "border-red-200 bg-red-50" : "border-zinc-200/80 bg-zinc-50/70"}"><dt class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">${l}</dt><dd class="text-sm font-semibold tabular-nums ${b ? "text-red-700" : "text-zinc-900"}">${val(v)}${b ? '<span class="sr-only"> (abnormal)</span>' : ""}</dd></div>`; }).join("")}</dl>`;
+
+/* ───────────────────────── Views ───────────────────────── */
+function homeView() {
+  const list = ranked();
+  const crit = list.filter((p) => p.outcome === "Critical").length; // same definition as the app: outcome status, not urgency band
+  const high = list.filter((p) => p.eff >= 70).length;
+  const readm = list.filter((p) => p.outcome === "Readmitted").length;
+  return `<div class="rise">${pageHeader("Command Centre", "Live cohort ranked by diagnostic risk · rule engine re-scores vitals and documented findings on every load")}
+  <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    ${tile("Patients", list.length)}${tile("Critical", crit, "text-red-600")}${tile("High risk ≥70", high, "text-orange-600")}${tile("Readmitted", readm, "text-purple-700")}${tile("Upcoming appts", 5 + state.runs.length, "text-teal-700")}${tile("Agent triage runs", SEEDED_RUNS + state.runs.length)}
+  </div>
+  <p class="mb-3 text-xs text-zinc-600">Score shown = effective risk, the higher of the stored clinician score and the live rule-engine score. Left border and badge show urgency.</p>
+  <ol class="space-y-3">${list.map((p, i) => {
+    const flags = p.risk.flags.slice(0, 2), more = p.risk.flags.length - flags.length;
+    const doc = !p.risk.flags.length && p.flagged[0] ? `<p class="mt-3 text-sm text-zinc-700"><span class="font-semibold">Documented:</span> ${esc(p.flagged[0])}</p>` : "";
+    const imaging = p.risk.flags.find((f) => f.category === "IMAGING");
+    return `<li class="rounded-xl border border-l-4 border-zinc-200/90 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-md ${p.level === "CRITICAL" ? "bg-gradient-to-b from-red-50/70 to-white" : "bg-white"} ${SEV[p.level].edge}">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="min-w-0"><h2 class="text-base font-semibold tracking-tight text-zinc-900"><span class="mr-2 font-mono text-sm text-zinc-500">#${i + 1}</span><span class="text-teal-700">${esc(p.name)}</span></h2>
+        <p class="text-xs text-zinc-600">${p.mrn} · ${p.age}y · ${p.gender} · ${p.blood}</p></div>
+        <div class="flex flex-wrap items-center gap-2">${sevBadge(p.level)}${outBadge(p.outcome)}${p.cohort ? `<span class="text-xs text-zinc-600">${p.cohort}</span>` : ""}</div>
+      </div>
+      <div class="mt-3 max-w-md">${riskBar(p.eff)}<p class="mt-0.5 text-xs text-zinc-600">rules ${p.risk.score} · stored ${p.stored}</p></div>
+      ${imaging ? `<p class="mt-3 inline-flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-800"><svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Diagnostic imaging red flag: fundus photo shows neovascularization of the disc (proliferative DR)</p>` : ""}
+      <div class="mt-3">${vitalsGrid(p.vitals)}</div>
+      ${flags.length ? `<ul class="mt-3 space-y-1 text-sm">${flags.map((f) => `<li><span class="font-medium ${SEV[f.severity].text}">${esc(f.label)}</span><span class="text-zinc-700">: ${esc(f.reason)}</span></li>`).join("")}${more > 0 ? `<li class="text-xs text-zinc-600">+${more} more</li>` : ""}</ul>` : doc}
+      <button type="button" data-run="${p.id}" class="mt-3 inline-flex rounded-lg border border-teal-600/80 bg-white px-3 py-1 text-xs font-semibold text-teal-700 transition-colors hover:bg-teal-50">Run triage agent<span class="sr-only"> for ${esc(p.name)}</span></button>
+    </li>`; }).join("")}</ol></div>`;
+}
+
+function agentView() {
+  const opts = ranked().map((p) => `<option value="${p.id}" ${p.id === state.draft.patient ? "selected" : ""}>${esc(p.name)} · ${p.mrn} · ${p.level}</option>`).join("");
+  const presets = PRESETS.map((p, i) => { const pt = SEED.find((x) => x.id === p.patient); return `<button type="button" data-preset="${i}" class="rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-left text-sm shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-teal-400 hover:bg-teal-50/60"><span class="flex items-center gap-2 font-medium text-zinc-900"><span class="size-2 shrink-0 rounded-full ${p.dot}" aria-hidden="true"></span>${p.title}</span><span class="block pl-4 text-xs text-zinc-600">${esc(pt.name)}</span></button>`; }).join("");
+  const form = card("Scenario input", `
+    <p class="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-600">Quick-fill scenarios</p>
+    <div class="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">${presets}</div>
+    <form id="agent-form" class="space-y-4">
+      <div><label for="patient" class="mb-1 block text-sm font-medium text-zinc-700">Patient</label><select id="patient" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm">${opts}</select></div>
+      <div><label for="text" class="mb-1 block text-sm font-medium text-zinc-700">Symptoms or clinician transcript</label>
+        <textarea id="text" rows="6" maxlength="4000" placeholder="Describe symptoms, or paste a transcript…" class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm">${esc(state.draft.text)}</textarea>
+        <p class="mt-1 text-right text-xs tabular-nums text-zinc-600"><span id="count">${state.draft.text.length}</span> / 4000</p></div>
+      <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-700 active:bg-teal-800">Run triage agent</button>
+      ${state.error ? `<div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">${esc(state.error)}</div>` : ""}
+    </form>`);
+  return `<div class="rise">${pageHeader("Agentic Triage Studio", "Free-text symptoms or a clinician transcript → urgency triage → SOAP note with ICD-10 → auto-booked specialist slot, persisted to the record.", `<span class="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">In-browser rule engine</span>`)}
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start"><div class="lg:sticky lg:top-24">${form}</div><div id="result" class="min-w-0 space-y-4">${state.result ? resultView(state.result) : emptyView()}</div></div></div>`;
+}
+const emptyView = () => card("", `<div class="text-sm text-zinc-600"><p class="font-semibold text-zinc-900">One input, four autonomous stages</p><ol class="mt-2 list-decimal space-y-1 pl-5"><li>Triage: parse symptoms (negation-aware) and set urgency over a deterministic safety floor.</li><li>SOAP: draft a structured note with ICD-10 codes.</li><li>Booking: reserve the right specialist slot automatically.</li><li>Persist: write everything to the patient record.</li></ol><p class="mt-3 font-medium text-teal-700">Pick a scenario to try it in one click.</p></div>`);
+function resultView(r) {
+  const total = r.steps.reduce((a, s) => a + s.ms, 0);
+  const timeline = r.steps.map((s, i) => `<li class="relative flex gap-3 pb-6 last:pb-0">${i < r.steps.length - 1 ? '<span class="absolute left-[13px] top-8 h-[calc(100%-2rem)] w-0.5 rounded-full bg-teal-200" aria-hidden="true"></span>' : ""}<span class="z-10 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold tabular-nums text-white shadow-sm ring-4 ring-teal-50">${i + 1}</span><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-x-2 gap-y-1"><p class="text-sm font-medium tracking-tight text-zinc-900">${s.label}</p><svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Done"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>${srcBadge}<span class="ml-auto font-mono text-xs tabular-nums text-zinc-500">${s.ms} ms</span></div><p class="mt-1 break-words text-sm leading-relaxed text-zinc-600">${esc(s.detail)}</p></div></li>`).join("");
+  const flagList = r.risk.flags.length ? `<ul class="space-y-2">${r.risk.flags.map((f) => `<li class="flex items-start gap-3"><span class="mt-0.5 shrink-0">${sevBadge(f.severity)}</span><div class="min-w-0 text-sm"><p class="font-medium text-zinc-900">${esc(f.label)} <span class="font-mono text-[10px] font-normal uppercase text-zinc-500">${f.category}</span></p><p class="text-zinc-600">${esc(f.reason)}</p></div></li>`).join("")}</ul>` : `<p class="text-sm text-zinc-600">No rule-based red flags.</p>`;
+  const sec = [["Subjective", r.soap.subjective], ["Objective", r.soap.objective], ["Assessment", r.soap.assessment], ["Plan", r.soap.plan]];
+  return `<div class="space-y-4 rise">
+  ${card("Agent step trace", `<ol>${timeline}</ol><p class="mt-5 border-t border-zinc-200/70 pt-3 text-right text-xs text-zinc-600">Total <span class="font-semibold tabular-nums text-zinc-700">${total} ms</span></p>`, { action: srcBadge })}
+  ${card("", `<div class="flex flex-wrap items-center gap-x-6 gap-y-3"><div class="flex items-center gap-2 text-sm font-medium text-zinc-900">${sevBadge(r.triage.level)}<span aria-hidden="true">→</span>${r.triage.department}</div><div class="flex min-w-48 flex-1 items-center gap-3 text-sm text-zinc-600"><span class="whitespace-nowrap font-medium tabular-nums text-zinc-900">Risk ${r.before} → ${r.after}</span><div class="flex-1">${riskBar(r.after)}</div>${outBadge(r.outcome)}</div><button type="button" data-tab-go="home" class="text-sm font-medium text-teal-700 hover:underline">Open Command Centre →</button></div>`)}
+  <div class="grid gap-4 xl:grid-cols-2">
+    ${card("Triage reasoning", `<p class="text-sm text-zinc-700">${esc(r.triage.reasoning)}</p>${r.triage.flaggedRisks.length ? `<ul class="mt-3 flex flex-wrap gap-1.5">${r.triage.flaggedRisks.map((f) => `<li class="rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${SEV[r.triage.level].badge}">${esc(f)}</li>`).join("")}</ul>` : ""}`, { action: srcBadge })}
+    ${card("Risk flags", flagList, { action: `<span class="text-xs font-semibold tabular-nums text-zinc-600">Score ${r.risk.score}</span>` })}
+  </div>
+  ${card(`<span class="flex items-center gap-2"><svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18m-11 5 2 2 4-4"/></svg>Booked appointment</span>`,
+    `<p class="text-base font-semibold tracking-tight text-zinc-900">${r.appt.doctorName}</p><p class="mt-0.5 text-sm tabular-nums text-zinc-600">${r.appt.department} · ${fmtDate(r.appt.scheduledAt)} · ${r.appt.status}</p>`,
+    { cls: "border-emerald-300/70 bg-emerald-50/40 shadow-md ring-1 ring-emerald-500/10 [&>header]:border-emerald-200/70 [&>header]:bg-emerald-50/80", action: `<span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20"><svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Auto-booked</span>` })}
+  ${card("SOAP note", `<ul class="mb-4 flex flex-wrap gap-1.5">${r.soap.icd10Codes.map((c) => `<li class="rounded bg-zinc-100 px-2 py-0.5 font-mono text-xs text-zinc-700">${c}</li>`).join("")}</ul><dl class="space-y-3 text-sm">${sec.map(([k, v]) => `<div><dt class="text-xs font-semibold uppercase tracking-wide text-zinc-600">${k}</dt><dd class="mt-0.5 text-zinc-700">${esc(v)}</dd></div>`).join("")}</dl><p class="mt-4 text-xs italic text-zinc-600">Draft — requires clinician review</p>`, { action: srcBadge })}
+  </div>`;
+}
+
+function insightsView() {
+  const total_n = METRICS.reduce((s, m) => s + m.n, 0);
+  const w = (k) => METRICS.reduce((s, m) => s + m[k] * m.n, 0) / total_n;
+  const list = ranked();
+  const hbar = (rows) => `<ul class="space-y-2.5">${rows.map((r) => `<li class="grid grid-cols-[minmax(0,8rem)_1fr_3.25rem] items-center gap-2 text-sm sm:grid-cols-[minmax(0,12rem)_1fr_3.25rem]"><span class="truncate text-zinc-700" title="${esc(r.label)}">${esc(r.label)}</span><div class="h-2.5 rounded-full bg-zinc-100 ring-1 ring-inset ring-zinc-200/60"><div class="h-full rounded-full transition-[width] duration-500 ease-out ${r.bar}" style="width:${Math.min(100, r.value)}%"></div></div><span class="text-right font-semibold tabular-nums text-zinc-900">${r.value}%</span></li>`).join("")}</ul>`;
+  const byRead = [...METRICS].sort((a, b) => b.readmit - a.readmit);
+  const byRec = [...METRICS].sort((a, b) => b.recovery - a.recovery);
+  const tier = (m) => (m.readmit >= 20 ? "High" : m.readmit >= 15 ? "Medium" : "Low");
+  const tierCls = { High: "bg-red-50 text-red-700 ring-red-600/20", Medium: "bg-amber-50 text-amber-800 ring-amber-600/20", Low: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" };
+  const urgency = ["CRITICAL", "HIGH", "MODERATE", "LOW"].map((l) => ({ label: l, value: list.filter((p) => p.level === l).length, bar: SEV[l].bar }));
+  const total = urgency.reduce((s, u) => s + u.value, 0);
+  const runsLog = state.runs.length ? `<ul class="divide-y divide-zinc-100 text-sm">${state.runs.slice(0, 6).map((r) => `<li class="flex flex-wrap items-center gap-2 py-2"><span class="font-medium text-zinc-900">${esc(r.patientName)}</span>${sevBadge(r.level)}<span class="text-zinc-600">→ ${r.department}</span></li>`).join("")}</ul>` : `<p class="text-sm text-zinc-600">No runs yet in this session. Open <button type="button" data-tab-go="agent" class="font-medium text-teal-700 underline underline-offset-4">Triage Studio</button> and run a scenario: the counter updates live.</p>`;
+  return `<div class="rise">${pageHeader("Outcomes Insights", `Cohort outcome patterns, protocol effectiveness and readmission risk · benchmarks from ${total_n} historical cases + live patients`)}
+  <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+    ${tile("Recovery rate", w("recovery").toFixed(1) + "%", "text-teal-700", "Weighted by sample size")}${tile("30-day readmission", w("readmit").toFixed(1) + "%", "text-orange-600", "Weighted by sample size")}${tile("Avg length of stay", w("los").toFixed(1) + " d", "text-zinc-900", "Weighted, days")}${tile("Live high-risk", list.filter((p) => p.eff >= 70).length, "text-red-600", `of ${list.length} patients, score ≥ 70`)}${tile("Triage runs", SEEDED_RUNS + state.runs.length, "text-zinc-900", state.runs.length ? `${state.runs.length} from this session` : "seeded history")}
+  </div>
+  <div class="grid gap-6 lg:grid-cols-5">
+    ${card("Recovery vs 30-day readmission by protocol", `<div class="space-y-5"><div><p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-600">Recovery rate</p>${hbar(METRICS.map((m) => ({ label: m.protocol, value: m.recovery, bar: "bg-teal-500" })))}</div><div><p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-600">30-day readmission</p>${hbar(METRICS.map((m) => ({ label: m.protocol, value: m.readmit, bar: "bg-orange-500" })))}</div></div>`, { cls: "lg:col-span-3" })}
+    ${card("Readmission risk clusters", `<p class="mb-4 text-sm text-zinc-700"><strong>${byRead[0].cohort}</strong> has the highest 30-day readmission at ${byRead[0].readmit}%.</p><ul class="space-y-2">${byRead.map((m) => `<li class="flex items-center justify-between gap-2 text-sm"><span class="truncate text-zinc-700">${m.cohort}</span><span class="flex shrink-0 items-center gap-2"><span class="font-semibold tabular-nums text-zinc-900">${m.readmit}%</span><span class="rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${tierCls[tier(m)]}">${tier(m)}</span></span></li>`).join("")}</ul><p class="mt-4 text-xs text-zinc-600">Best recovery: <strong>${byRec[0].protocol}</strong> at ${byRec[0].recovery}%.</p>`, { cls: "lg:col-span-2" })}
+    ${card("Triage urgency mix (live patients)", `<div role="img" aria-label="Urgency mix" class="flex h-6 overflow-hidden rounded-full bg-zinc-100 ring-1 ring-inset ring-zinc-200/60">${urgency.filter((u) => u.value).map((u) => `<div class="${u.bar} flex items-center justify-center text-[11px] font-semibold text-white" style="width:${(u.value / total) * 100}%">${u.value}</div>`).join("")}</div><ul class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">${urgency.map((u) => `<li class="flex items-center gap-2"><span class="size-2.5 rounded-[3px] ${u.bar}" aria-hidden="true"></span><span class="text-zinc-700">${u.label}</span><span class="ml-auto font-semibold tabular-nums text-zinc-900">${u.value}</span></li>`).join("")}</ul>`, { cls: "lg:col-span-2" })}
+    ${card("Triage runs this session", runsLog, { cls: "lg:col-span-3" })}
+  </div></div>`;
+}
+
+/* ───────────────────────── Shell: tabs, events ───────────────────────── */
+const TABS = [["home", "Command Centre", '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'], ["agent", "Triage Studio", '<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/>'], ["insights", "Outcomes Insights", '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/>']];
+function render() {
+  document.getElementById("tabs").innerHTML = TABS.map(([id, label, icon]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${state.tab === id}" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-center text-xs font-medium transition-colors sm:flex-row sm:gap-2 sm:px-3 sm:text-sm ${state.tab === id ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"}"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>${label}</button>`).join("");
+  document.getElementById("app").innerHTML = state.tab === "agent" ? agentView() : state.tab === "insights" ? insightsView() : homeView();
+  document.title = `${TABS.find((t) => t[0] === state.tab)[1]} · MedPulse AI Demo`;
+}
+const go = (tab) => { state.tab = tab; state.error = null; render(); window.scrollTo({ top: 0 }); history.replaceState(null, "", tab === "home" ? location.pathname : "#" + tab); };
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab],[data-tab-go],[data-tab-link],[data-preset],[data-run]");
+  if (!t) return;
+  if (t.dataset.tabLink) { e.preventDefault(); return go("home"); }
+  if (t.dataset.tab || t.dataset.tabGo) return go(t.dataset.tab || t.dataset.tabGo);
+  if (t.dataset.run) { state.draft.patient = t.dataset.run; state.result = null; return go("agent"); }
+  if (t.dataset.preset) {
+    const p = PRESETS[+t.dataset.preset];
+    state.draft = { patient: p.patient, text: p.text }; state.error = null; state.result = null; render();
+  }
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id === "text") { state.draft.text = e.target.value; document.getElementById("count").textContent = e.target.value.length; }
+  if (e.target.id === "patient") state.draft.patient = e.target.value;
+});
+document.addEventListener("submit", (e) => {
+  if (e.target.id !== "agent-form") return;
+  e.preventDefault();
+  const text = state.draft.text.trim();
+  if (!text) { state.error = "Enter symptoms or a transcript first."; return render(); }
+  if (text.length > 4000) { state.error = "Text is too long (max 4000 characters)."; return render(); }
+  state.error = null;
+  try { state.result = runAgent(state.draft.patient, text); } catch (err) { console.error(err); state.error = "The in-browser agent could not process this request."; }
+  render();
+  document.getElementById("result")?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+const tabFromHash = () => (location.hash === "#agent" ? "agent" : location.hash === "#insights" ? "insights" : "home");
+window.addEventListener("hashchange", () => { state.tab = tabFromHash(); state.error = null; render(); });
+state.tab = tabFromHash();
+render();
+</script>
+</body>
+</html>
