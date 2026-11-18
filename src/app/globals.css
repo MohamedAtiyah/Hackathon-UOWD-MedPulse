@@ -11,6 +11,14 @@
 }
 
 @layer base {
+  body {
+    background-color: var(--color-zinc-50);
+    background-image:
+      radial-gradient(60rem 28rem at 50% -8%, rgb(153 246 228 / 0.32), transparent 70%),
+      radial-gradient(rgb(24 24 27 / 0.07) 1px, transparent 1px);
+    background-size: auto, 22px 22px;
+    background-repeat: no-repeat, repeat;
+  }
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;

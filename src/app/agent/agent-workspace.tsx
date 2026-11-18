@@ -96,7 +96,7 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
       <div className="lg:sticky lg:top-6">
         <Card title="Scenario input">
           <div className="mb-4">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">Quick-fill scenarios</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-600">Quick-fill scenarios</p>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {PRESETS.map((p) => {
                 const match = patients.find((x) => x.name.toLowerCase().includes(p.patient.toLowerCase()));
@@ -112,7 +112,7 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
                       <span className={`size-2 shrink-0 rounded-full ${p.dot}`} aria-hidden />
                       {p.title}
                     </span>
-                    <span className="block pl-4 text-xs text-zinc-500">{match ? match.name : `${p.patient} (not found)`}</span>
+                    <span className="block pl-4 text-xs text-zinc-600">{match ? match.name : `${p.patient} (not found)`}</span>
                   </button>
                 );
               })}
@@ -149,7 +149,7 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
                 placeholder="Describe symptoms, or paste a transcript…"
                 className={`w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm ${focus}`}
               />
-              <p className="mt-1 text-right text-xs tabular-nums text-zinc-500">{text.length} / 4000</p>
+              <p className="mt-1 text-right text-xs tabular-nums text-zinc-600">{text.length} / 4000</p>
             </div>
             <button
               type="submit"
@@ -229,8 +229,8 @@ function Results({ r }: { r: AgentResult }) {
         <ol>
           {r.steps.map((s, i) => (
             <li key={s.name} className="relative flex gap-3 pb-6 last:pb-0">
-              {i < r.steps.length - 1 && <span className="absolute left-[13px] top-8 h-[calc(100%-2rem)] w-px bg-zinc-200" aria-hidden />}
-              <span className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-semibold tabular-nums text-white ring-4 ring-teal-50">
+              {i < r.steps.length - 1 && <span className="absolute left-[13px] top-8 h-[calc(100%-2rem)] w-0.5 rounded-full bg-teal-200" aria-hidden />}
+              <span className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold tabular-nums text-white shadow-sm ring-4 ring-teal-50">
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
@@ -238,14 +238,14 @@ function Results({ r }: { r: AgentResult }) {
                   <p className="text-sm font-medium tracking-tight text-zinc-900">{s.label}</p>
                   <CircleCheck className="size-4 text-emerald-600" aria-label="Done" />
                   <SourceBadge source={s.source} />
-                  <span className="ml-auto font-mono text-xs tabular-nums text-zinc-400">{s.durationMs} ms</span>
+                  <span className="ml-auto font-mono text-xs tabular-nums text-zinc-500">{s.durationMs} ms</span>
                 </div>
                 <p className="mt-1 break-words text-sm leading-relaxed text-zinc-600">{s.detail}</p>
               </div>
             </li>
           ))}
         </ol>
-        <p className="mt-5 border-t border-zinc-200/70 pt-3 text-right text-xs text-zinc-500">
+        <p className="mt-5 border-t border-zinc-200/70 pt-3 text-right text-xs text-zinc-600">
           Total <span className="font-semibold tabular-nums text-zinc-700">{total} ms</span>
         </p>
       </Card>
@@ -254,7 +254,7 @@ function Results({ r }: { r: AgentResult }) {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-zinc-900">
             <SeverityBadge level={triage.level} />
-            <ArrowRight className="size-4 text-zinc-400" aria-hidden />
+            <ArrowRight className="size-4 text-zinc-500" aria-hidden />
             <Stethoscope className="size-4 text-teal-600" aria-hidden />
             {triage.department}
           </div>
@@ -293,7 +293,7 @@ function Results({ r }: { r: AgentResult }) {
       </div>
 
       <Card
-        className="border-emerald-200/80 bg-emerald-50/30"
+        className="border-emerald-300/70 bg-emerald-50/40 shadow-md ring-1 ring-emerald-500/10 [&>header]:border-emerald-200/70 [&>header]:bg-emerald-50/80"
         title={
           <span className="flex items-center gap-2">
             <CalendarCheck className="size-4 text-emerald-600" aria-hidden /> Booked appointment
@@ -334,12 +334,12 @@ function Results({ r }: { r: AgentResult }) {
         <dl className="space-y-3 text-sm">
           {sections.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{k}</dt>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-600">{k}</dt>
               <dd className="mt-0.5 whitespace-pre-line text-zinc-700">{v}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-4 text-xs italic text-zinc-500">Draft — requires clinician review</p>
+        <p className="mt-4 text-xs italic text-zinc-600">Draft — requires clinician review</p>
       </Card>
     </>
   );

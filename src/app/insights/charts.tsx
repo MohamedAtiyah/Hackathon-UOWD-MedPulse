@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 const pct = (v: number, max: number) => (max > 0 ? Math.min(100, Math.max(0, (v / max) * 100)) : 0);
 
 export function Empty({ children = "No data yet" }: { children?: ReactNode }) {
-  return <p className="py-6 text-center text-sm text-zinc-500">{children}</p>;
+  return <p className="py-6 text-center text-sm text-zinc-600">{children}</p>;
 }
 
 /** Horizontal bars on a 0..max scale. `bar` is a Tailwind bg class. */
@@ -52,7 +52,7 @@ export function StackedBar({ parts, label }: { parts: { label: string; value: nu
           <li key={p.label} className="flex items-center gap-2">
             <span className={`size-2.5 rounded-[3px] ${p.bar}`} aria-hidden />
             <span className="text-zinc-700">{p.label}</span>
-            <span className="ml-auto font-semibold tabular-nums text-zinc-900">{p.value} <span className="font-normal text-zinc-500">({Math.round(pct(p.value, total))}%)</span></span>
+            <span className="ml-auto font-semibold tabular-nums text-zinc-900">{p.value} <span className="font-normal text-zinc-600">({Math.round(pct(p.value, total))}%)</span></span>
           </li>
         ))}
       </ul>
@@ -130,7 +130,7 @@ export function ProtocolChart({
           <li key={r.name} className="grid gap-2 lg:grid-cols-[14rem_1fr] lg:gap-4">
             <div>
               <p className="font-medium text-zinc-900">{r.name}</p>
-              <p className="text-xs text-zinc-500">{r.protocol} · n={r.n}</p>
+              <p className="text-xs text-zinc-600">{r.protocol} · n={r.n}</p>
               <div className="mt-1"><TierPill tier={r.tier} /></div>
             </div>
             <div className="space-y-1.5">
@@ -140,7 +140,7 @@ export function ProtocolChart({
           </li>
         ))}
       </ul>
-      <div className="mt-3 flex justify-between text-[11px] text-zinc-400 lg:ml-[14.5rem] lg:mr-16" aria-hidden>
+      <div className="mt-3 flex justify-between text-[11px] text-zinc-500 lg:ml-[14.5rem] lg:mr-16" aria-hidden>
         <span>0%</span><span>50%</span><span>100%</span>
       </div>
     </div>

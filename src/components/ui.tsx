@@ -81,7 +81,7 @@ export function PageHeader({ title, subtitle, children }: { title: string; subti
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px] sm:leading-9">{title}</h1>
-        {subtitle && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-500">{subtitle}</p>}
+        {subtitle && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-600">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -100,7 +100,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={cx("rounded-xl border border-zinc-200/80 bg-white shadow-[0_1px_2px_rgb(0_0_0/0.04)]", className)}>
+    <section className={cx("rounded-xl border border-zinc-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-md", className)}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-3 rounded-t-xl border-b border-zinc-200/70 bg-zinc-50/60 px-5 py-3">
           {title && <h2 className="text-sm font-semibold tracking-tight text-zinc-900">{title}</h2>}
@@ -125,10 +125,10 @@ export function StatTile({
 }) {
   const toneText = { slate: "text-zinc-900", red: "text-red-600", orange: "text-orange-600", teal: "text-teal-700", purple: "text-purple-700" }[tone];
   return (
-    <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</p>
+    <div className="rounded-xl border border-zinc-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-md">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-600">{label}</p>
       <p className={cx("mt-1.5 text-3xl font-semibold tracking-tight tabular-nums", toneText)}>{value}</p>
-      {hint && <p className="mt-1 text-xs text-zinc-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-zinc-600">{hint}</p>}
     </div>
   );
 }
@@ -172,10 +172,10 @@ export function VitalsGrid({ vitals, compact = false }: { vitals: Vitals; compac
               bad ? "border-red-200 bg-red-50" : "border-zinc-200/80 bg-zinc-50/70",
             )}
           >
-            <dt className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{d.label}</dt>
+            <dt className="text-[11px] font-medium uppercase tracking-wider text-zinc-600">{d.label}</dt>
             <dd className={cx("font-semibold tabular-nums", compact ? "text-sm" : "text-lg", bad ? "text-red-700" : "text-zinc-900")}>
               {value ?? "—"}
-              {!compact && value != null && <span className="ml-1 text-xs font-normal text-zinc-500">{d.unit}</span>}
+              {!compact && value != null && <span className="ml-1 text-xs font-normal text-zinc-600">{d.unit}</span>}
               {bad && <span className="sr-only"> (abnormal)</span>}
             </dd>
           </div>
@@ -186,7 +186,7 @@ export function VitalsGrid({ vitals, compact = false }: { vitals: Vitals; compac
 }
 
 export function RiskFlagList({ flags, empty = "No rule-based red flags." }: { flags: RiskFlag[]; empty?: string }) {
-  if (!flags.length) return <p className="text-sm text-zinc-500">{empty}</p>;
+  if (!flags.length) return <p className="text-sm text-zinc-600">{empty}</p>;
   return (
     <ul className="space-y-2">
       {flags.map((f, i) => (
@@ -194,7 +194,7 @@ export function RiskFlagList({ flags, empty = "No rule-based red flags." }: { fl
           <SeverityBadge level={f.severity} className="mt-0.5 shrink-0" />
           <div className="min-w-0 text-sm">
             <p className="font-medium text-zinc-900">
-              {f.label} <span className="font-mono text-[10px] font-normal uppercase text-zinc-400">{f.category}</span>
+              {f.label} <span className="font-mono text-[10px] font-normal uppercase text-zinc-500">{f.category}</span>
             </p>
             <p className="text-zinc-600">{f.reason}</p>
           </div>

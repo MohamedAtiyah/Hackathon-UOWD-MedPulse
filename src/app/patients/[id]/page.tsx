@@ -23,7 +23,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
   const now = nowMs();
   const sessionIds = new Set(p.triageSessions.map((s) => s.id));
   const sessions = [...p.triageSessions].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const empty = (t: string) => <p className="text-sm text-zinc-500">{t}</p>;
+  const empty = (t: string) => <p className="text-sm text-zinc-600">{t}</p>;
 
   return (
     <>
@@ -35,7 +35,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900">
             {p.name} <SeverityBadge level={level} /> <OutcomeBadge status={p.outcomeStatus} />
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-600">
             {p.mrn} · {p.age}y · {p.gender} · {p.bloodType}
             {p.cohortCategory && ` · ${p.cohortCategory}`}
           </p>
@@ -89,7 +89,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           {p.appointments.length ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[32rem] text-left text-sm">
-                <thead className="text-xs uppercase text-zinc-500">
+                <thead className="text-xs uppercase text-zinc-600">
                   <tr>
                     <th className="pb-2 pr-3 font-medium">Date</th>
                     <th className="pb-2 pr-3 font-medium">Department</th>
@@ -133,7 +133,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <SeverityBadge level={s.urgencyLevel} />
                     <span className="font-medium text-zinc-900">→ {s.recommendedDepartment}</span>
-                    <span className="text-xs text-zinc-500">{formatDateTime(s.createdAt)}</span>
+                    <span className="text-xs text-zinc-600">{formatDateTime(s.createdAt)}</span>
                   </div>
                   <blockquote className="mt-2 border-l-2 border-zinc-300 pl-3 text-sm italic text-zinc-600">{s.rawInput}</blockquote>
                   <p className="mt-2 text-sm text-zinc-700">{s.agentReasoning}</p>
@@ -159,7 +159,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
             <div className="space-y-4">
               {p.soapNotes.map((n) => (
                 <article key={n.id} id={n.id} className="scroll-mt-20 rounded-lg border border-zinc-200 p-4">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-600">
                     <a href={`#${n.id}`} className="font-medium text-zinc-700 hover:underline">
                       {formatDateTime(n.createdAt)}
                     </a>
@@ -180,7 +180,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                       ] as const
                     ).map(([k, v]) => (
                       <div key={k}>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{k}</dt>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-600">{k}</dt>
                         <dd className="mt-0.5 whitespace-pre-line text-zinc-700">{v}</dd>
                       </div>
                     ))}

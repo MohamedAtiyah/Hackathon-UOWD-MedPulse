@@ -30,7 +30,7 @@ export default async function CommandCentre() {
         <StatTile label="Agent triage runs" value={t.triageSessions} />
       </div>
 
-      <p className="mb-3 text-xs text-zinc-500">
+      <p className="mb-3 text-xs text-zinc-600">
         Score shown = effective risk, the higher of the stored clinician score and the live rule-engine score. Left
         border and badge show urgency.
       </p>
@@ -41,29 +41,29 @@ export default async function CommandCentre() {
           const flags = p.risk.flags.slice(0, 2);
           const more = p.risk.flags.length - flags.length;
           return (
-            <li key={p.id} className={`rounded-xl border border-l-4 border-zinc-200/80 bg-white p-4 shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-shadow hover:shadow-md ${BORDER[level]}`}>
+            <li key={p.id} className={`rounded-xl border border-l-4 border-zinc-200/90 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-md ${level === "CRITICAL" ? "bg-gradient-to-b from-red-50/70 to-white" : "bg-white"} ${BORDER[level]}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="text-base font-semibold tracking-tight text-zinc-900">
-                    <span className="mr-2 font-mono text-sm text-zinc-400">#{i + 1}</span>
+                    <span className="mr-2 font-mono text-sm text-zinc-500">#{i + 1}</span>
                     <Link href={`/patients/${p.id}`} className="text-teal-700 underline-offset-4 hover:underline">
                       {p.name}
                     </Link>
                   </h2>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-zinc-600">
                     {p.mrn} · {p.age}y · {p.gender} · {p.bloodType}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <SeverityBadge level={level} />
                   <OutcomeBadge status={p.outcomeStatus} />
-                  {p.cohortCategory && <span className="text-xs text-zinc-500">{p.cohortCategory}</span>}
+                  {p.cohortCategory && <span className="text-xs text-zinc-600">{p.cohortCategory}</span>}
                 </div>
               </div>
 
               <div className="mt-3 max-w-md">
                 <RiskScoreBar score={p.effectiveRiskScore} />
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-0.5 text-xs text-zinc-600">
                   rules {p.risk.score} · stored {p.riskScore}
                 </p>
               </div>
@@ -80,7 +80,7 @@ export default async function CommandCentre() {
                         <span className={`font-semibold ${SEVERITY_STYLES[f.severity].text}`}>{f.label}</span>: {f.reason}
                       </li>
                     ))}
-                    {more > 0 && <li className="text-zinc-500">+{more} more</li>}
+                    {more > 0 && <li className="text-zinc-600">+{more} more</li>}
                   </ul>
                 ) : p.flaggedConditions.length > 0 ? (
                   <p className="text-zinc-600">

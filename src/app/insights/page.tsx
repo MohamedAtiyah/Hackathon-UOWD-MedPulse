@@ -62,7 +62,7 @@ export default async function InsightsPage() {
                 <div key={tier}>
                   <TierPill tier={tier} />
                   {group.length === 0 ? (
-                    <p className="mt-2 text-sm text-zinc-500">No cohorts</p>
+                    <p className="mt-2 text-sm text-zinc-600">No cohorts</p>
                   ) : (
                     <ul className="mt-2 space-y-2">
                       {group.map((c) => (
