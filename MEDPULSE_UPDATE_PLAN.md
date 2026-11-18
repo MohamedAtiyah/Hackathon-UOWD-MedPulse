@@ -23,8 +23,6 @@ Reviewed against GitHub `MohamedAtiyah/Hackathon-UOWD-Unnamed` @ `3c467bd` (bran
 | Bucket wording inconsistent | Consistent in `.env.example`, `CLAUDE.md`, `AGENTS.md`. Missing from README and DEMO.md (Task 2 adds it) |
 | LLM timeout 5 s in docs | Already 15 s everywhere |
 | `insights.test.ts` fails | 32/32 pass after `npx prisma generate`. `insights.test.ts` imports `db.ts` → `@prisma/client`, which needs a generated client; that was the earlier failure |
-| Seed has SQLite-specific code | No. `deleteMany` children-first in one transaction; `createMany` works on Postgres |
-| Search uses `contains` filters | None in `src/lib`. Task 5.3 is a check only |
 | `OPENAI_API_KEY` set | `.env` has it **empty** |
 | Toolchain healthy | On the iCloud Desktop folder `npm test` took ~190 s; quarantine flag removed. Move the repo off Desktop if it stays slow |
 ## Rules (from CLAUDE.md / AGENTS.md)
@@ -48,10 +46,8 @@ Reviewed against GitHub `MohamedAtiyah/Hackathon-UOWD-Unnamed` @ `3c467bd` (bran
 | 1 | Provider wording → "OpenAI-assisted" | Small, visible to judges |
 | 2 | Object-storage guidance in README | Tiny, docs only |
 | 3 | Apply the brand identity | Self-contained, no backend risk |
-| 4 | Move the DB to Neon Postgres | Risky infra change, so do it once the UI is stable |
-| 5 | Wire Neon into code + deploy env | Depends on 4 |
-| 5b | Confirm OpenAI is live | Needs the key; can run in parallel with 4–5 |
-| 6 | Test and report | Final gate |
+| 4 | Confirm OpenAI is live | Needs the key |
+| 5 | Test and report | Final gate |
 
 ---
 
@@ -84,7 +80,7 @@ Add "Object storage (optional)", ≤ 12 lines, plus a one-line pointer in `docs/
 - Private by default; access via signed URLs only.
 - Object keys never contain patient names/MRNs (e.g. `patients/<cuid>/<uuid>.pdf`).
 - Separate bucket per environment; never point dev at prod.
-- If uploads are ever added, use object storage (e.g. Vercel Blob, S3, R2, or Neon Object Storage), not DB columns.
+- If uploads are ever added, use object storage (e.g. Vercel Blob, S3, R2), not DB columns.
 - The current demo uploads nothing; the variable is reserved.
 
 ---
@@ -231,51 +227,7 @@ practices applied; next candidates from 3.8.
 
 ---
 
-## Task 4 — Move the DB to Neon Postgres
-
-> ⚠️ **Decision to confirm with me first:** after this change the app needs internet for its database. The
-> "works offline" claim in CHALLENGE.md/DEMO.md then only means *works without an AI key*. Prisma can't
-> switch providers by env var, so we can't keep SQLite as a fallback. Mitigations: record a backup screen
-> video and reword "runs fully offline" in README/CHALLENGE/DEMO. Neon is still needed to deploy (Vercel can't host a SQLite file).
-
-> The Neon MCP/plugin in this environment needs authorisation first (`/mcp` in an interactive session).
-> Otherwise ask me to create the project in the Neon console and paste the strings into `.env` myself.
-> **Never print or commit connection strings.**
-
-1. Neon project `medpulse-ai`, region `aws-ap-southeast-1` (Singapore), Postgres 17 (Neon default). Branches `main` (demo/prod) and `dev`.
-2. Per branch: **pooled** (`-pooler` host) → `DATABASE_URL`; **direct** → `DIRECT_URL`; both `?sslmode=require`.
-3. `prisma/schema.prisma`: `provider = "postgresql"`, `url = env("DATABASE_URL")`, `directUrl = env("DIRECT_URL")`.
-   Update the header comment (currently "SQLite schema…"). **Keep JSON-as-String columns and String enums**; note native `Json`/enums as post-hackathon.
-4. `.env.example`: replace the `file:./dev.db` line with
-   ```bash
-   # Neon Postgres. Pooled URL for the app, direct URL for Prisma schema changes.
-   DATABASE_URL="postgresql://USER:PASSWORD@HOST-pooler.REGION.aws.neon.tech/neondb?sslmode=require"
-   DIRECT_URL="postgresql://USER:PASSWORD@HOST.REGION.aws.neon.tech/neondb?sslmode=require"
-   ```
-5. `npx prisma generate && npm run db:push && npm run db:seed` against **dev**, then **main**.
-6. Seed: already Postgres-safe (verified). Only fix if it actually fails.
-7. Replace "SQLite" wording: `CHALLENGE.md` (stack line), `ARCHITECTURE.md` (layout comment, data-model note "SQLite has no enums", "reads live SQLite"),
-   `CLAUDE.md`/`AGENTS.md` learnings (stack line, "short SQLite txn", `Env:` line adds `DIRECT_URL`), `src/lib/db.ts` comment
-   ("exhausting SQLite connections" → "database connections"), README quickstart. `.gitignore` SQLite lines can stay.
-
-**Done when:** seed succeeds on Neon dev; `npx prisma studio` shows 6 patients and 5 outcome metrics.
-
----
-
-## Task 5 — Wire Neon into code and deploy env
-
-1. `src/lib/db.ts`: comment only.
-2. Add `"postinstall": "prisma generate"` to `package.json` scripts.
-3. Case sensitivity: no `contains`/search filters exist today (verified). If Task 3 adds search, use `mode: "insensitive"`.
-4. Dates: `booking.ts` and seed use JS `Date` → Postgres `timestamp(3)` in UTC. Confirm appointment times render the same as on SQLite (render with an explicit timezone in the UI to avoid server/client mismatch).
-5. Deployment env list to give me (I set them; you don't): `DATABASE_URL` (pooled), `DIRECT_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `LLM_TIMEOUT_MS` (optional). All server-only, never `NEXT_PUBLIC_`.
-6. Storage: no code. `STORAGE_BUCKET` stays reserved.
-
-**Done when:** `npm run build` passes with Neon env set and `npm run dev` loads every page from Neon.
-
----
-
-## Task 5b — Confirm OpenAI is live
+## Task 4 — Confirm OpenAI is live
 
 1. `.env` currently has `OPENAI_API_KEY=` **empty**. Ask me to paste the organisers' key (never print it).
 2. Keep `OPENAI_MODEL=gpt-4o-mini`. Ask before switching models; keep it env-only.
@@ -290,19 +242,19 @@ practices applied; next candidates from 3.8.
 
 ---
 
-## Task 6 — Test and report
+## Task 5 — Test and report
 
 1. `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`. Paste results.
-2. Manual pass on Neon-backed `npm run dev`, following `docs/DEMO.md`:
+2. Manual pass on `npm run dev` (local SQLite), following `docs/DEMO.md`:
    - `/`: patients ranked by risk (Harold Brennan top, score 94); severity badge colours + labels correct.
    - `/patients/[id]`: flags show rule + triggering value; Priya Raman shows the imaging flag.
    - `/agent`: all four scenarios **with the key set**, then once with it unset; Okafor → CRITICAL / Cardiology / Dr. Marcus Chen +30 min;
      Alvarez → LOW / Primary Care / Dr. Grace Mensah +7 d. OpenAI never lowers urgency; label switches "OpenAI-assisted" ↔ "Offline rule engine".
    - `/insights`: COPD readmission 22.7% highest, ACS/PCI recovery 94.1% best.
-   - A triage run writes TriageSession, SoapNote, Appointment rows in Neon (check Prisma Studio). Re-seed afterwards (`npm run db:seed`).
+   - A triage run writes TriageSession, SoapNote, Appointment rows (check `npx prisma studio`). Re-seed afterwards (`npm run db:seed`).
 3. Brand: logo animates once; reduced-motion disables it; Tab shows the teal focus ring; favicon shows.
 4. Lighthouse (Performance, Accessibility, Best Practices) on `/` and `/insights` against `npm run build && npm start`, not dev. List scores < 90 with top fixes; watch LCP, CLS, INP.
-5. Report in chat and update `TASKS.md`: passed, failed, left, live-demo risks (Wi-Fi now needed for the DB and for OpenAI; backup video).
+5. Report in chat and update `TASKS.md`: passed, failed, left, live-demo risks (Wi-Fi needed for OpenAI; rules fallback; backup video).
 
 ---
 
@@ -311,8 +263,7 @@ practices applied; next candidates from 3.8.
 - [ ] Labels say "OpenAI-assisted"; no stale provider refs
 - [ ] Object-storage guidance in README
 - [ ] Brand identity applied + `docs/BRAND.md`
-- [ ] Offline-trade-off decision confirmed; Prisma on Neon (pooled + direct), seeded dev + main
 - [ ] OpenAI confirmed live (badge + `[llm] ok` log); key only in env
-- [ ] `postinstall` prisma generate; build passes
+- [ ] Build passes
 - [ ] Typecheck, lint, tests pass; manual demo pass done
 - [ ] Lighthouse results + final report; `TASKS.md` updated
