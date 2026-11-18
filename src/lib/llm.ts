@@ -1,16 +1,16 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import OpenAI from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
 import type { z } from "zod";
 
 // Optional LLM layer. Every failure mode (no key, timeout, refusal, bad JSON) returns null
 // so callers fall back to deterministic rules and the demo works offline.
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
+const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 15_000;
 
-let client: Anthropic | null = null;
+let client: OpenAI | null = null;
 
-export const llmEnabled = (): boolean => Boolean(process.env.ANTHROPIC_API_KEY);
+export const llmEnabled = (): boolean => Boolean(process.env.OPENAI_API_KEY);
 
 /** One structured-output call validated against `schema`; null on any failure. */
 export async function llmStructured<S extends z.ZodType>(
@@ -19,20 +19,17 @@ export async function llmStructured<S extends z.ZodType>(
   user: string,
 ): Promise<z.infer<S> | null> {
   if (!llmEnabled()) return null;
-  client ??= new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 });
+  client ??= new OpenAI({ timeout: TIMEOUT_MS, maxRetries: 0 });
   try {
-    const res = await client.beta.messages.parse({
+    const res = await client.responses.parse({
       model: MODEL,
-      max_tokens: 4000,
-      system,
-      messages: [{ role: "user", content: user }],
-      output_config: { effort: "low", format: betaZodOutputFormat(schema) },
-      // On a safety decline the API retries on a fallback model inside the same call.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      input: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      text: { format: zodTextFormat(schema, "structured_result") },
     });
-    if (res.stop_reason === "refusal" || res.stop_reason === "max_tokens") return null;
-    return res.parsed_output ?? null;
+    return (res.output_parsed ?? null) as z.infer<S> | null;
   } catch (err) {
     // Log the class only, never request content (synthetic PHI) or credentials.
     console.warn(`[llm] falling back to rules: ${err instanceof Error ? err.name : "unknown error"}`);

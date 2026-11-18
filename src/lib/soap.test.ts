@@ -63,6 +63,6 @@ test("mergeSoap drops invalid codes and falls back", () => {
 });
 
 test("llmSoap returns null without API key", async () => {
-  delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.OPENAI_API_KEY;
   assert.equal(await llmSoap("cough", patient, noRisk, triage), null);
 });

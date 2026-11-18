@@ -12,16 +12,24 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Session Learnings (auto-updated by handoff)
 
 ### Implicit Rules
-- Push: git push origin main:Main; remote default branch Main; do not create lowercase main
-- Command Centre score = effectiveRiskScore = max(stored riskScore, live evaluateRisk score)
-- Reseed after any rehearsal/smoke: npm run db:seed (pristine 6 patients/3 sessions/4 SOAP/5 appts)
-- No ANTHROPIC_API_KEY in .env; demo runs on offline rule engine
-- Commit messages end with Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+- Stack: Next.js 16.4.6, React 19.3, Tailwind 4, TS strict, Prisma 6.19.3 SQLite, zod 4, openai SDK, tsx tests via node:test
+- Inside src/lib import siblings relatively ('./types') so tsx tests resolve; src/app uses '@/lib/...'
+- Route handlers thin: req.json try/catch → zod parse → lib → Response.json; errors { error } 400/404/500
+- Env: DATABASE_URL required; OPENAI_API_KEY optional; OPENAI_MODEL, LLM_TIMEOUT_MS, STORAGE_BUCKET optional
+- Reset demo data: npx prisma db seed (idempotent); smoke tests mutate DB so reseed after
+- Every keyword matcher must call stripNegated first
 
 ### Key Decisions
-- Decision: skip pushing origin main (lowercase) — Reason: case-insensitive filesystems collide refs main/Main, breaking fetch for team; default branch Main already serves judges
-- Decision: no seed changes during freeze — Reason: Brennan displayed score derives from vitals (100); lowering stored score would not change Command Centre display and alters clinical story
-- Decision: Kenji Watanabe typed ECG beat as optional visible escalation — Reason: largest on-screen jump 24 LOW → 70 CRITICAL, also reranks Command Centre
-- Decision: DEMO.md says risk bar 100 / rules 100 · stored 94 for Brennan — Reason: presenter must say what screen shows
+- Decision: added the official OpenAI SDK + zod structured outputs (lead-approved) — Reason: ChatGPT Responses API validates triage and SOAP output at the provider boundary
+- Decision: llm.ts uses client.responses.parse, model env OPENAI_MODEL default gpt-4o-mini, timeout LLM_TIMEOUT_MS default 15s, maxRetries 0; returns null on no key/error/refusal — Reason: offline demo + rule fallback, never block pipeline
+- Decision: LLM zod schemas have no min/max constraints — Reason: structured outputs reject some JSON-schema constraints; enforce after parse
+- Decision: risk score = per-category worst weight (CRITICAL 70/HIGH 40/MOD 20/LOW 5), top + 0.5×others, cap 100 — Reason: single CRITICAL ≥ 70 = high risk; avoid double counting within category
+- Decision: evaluateRisk(vitals, findings) scans stored flaggedConditions + transcript text — Reason: ECG/troponin/imaging findings not in vitals still flag
+- Decision: mergeTriage level = maxLevel(rule, llm); dept from LLM only if LLM strictly higher — Reason: LLM can escalate, never downgrade
+- Decision: agent runs LLM calls before one interactive $transaction writing TriageSession+Appointment+SoapNote (linked triageSessionId) + patient update (riskScore max, flags union, outcomeStatus Critical if CRITICAL) — Reason: short SQLite txn, audit trail
+- Decision: booking offsets CRITICAL +30m Confirmed, HIGH +2h Confirmed, MODERATE +1d, LOW +7d Scheduled, rounded up to :15; roster reuses seed doctor names — Reason: deterministic demo
+- Decision: patientId required for /api/agent; new patients via POST /api/patients (risk engine scores on intake) — Reason: TriageSession.patientId non-null; two persisting demo actions
+- Decision: shared views.ts mappers + text.ts stripNegated owned by lead — Reason: prevent concurrent edits; one fix point for negation
+- Decision: no /api/triage,/api/soap,/api/appointments separate routes — Reason: /api/agent does all three atomically; ARCHITECTURE.md lists actual routes
 
 <!-- handoff:learnings:end -->

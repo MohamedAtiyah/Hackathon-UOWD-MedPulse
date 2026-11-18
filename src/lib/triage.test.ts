@@ -48,7 +48,7 @@ test("mergeTriage takes LLM department when it escalates", () => {
 });
 
 test("llmTriage returns null without API key", async () => {
-  delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.OPENAI_API_KEY;
   const p: PatientContext = { name: "X", age: 50, gender: "Male", chronicConditions: [], vitals: {} };
   assert.equal(await llmTriage("cough", p, noRisk), null);
 });

@@ -11,7 +11,7 @@ src/lib/                 (Opus-owned: types, json, views, llm, db)
   types.ts               all shared types + URGENCY_LEVELS/DEPARTMENTS, maxLevel()
   json.ts                parseJson / parseStringArray / toJson: the only JSON-column helpers
   views.ts               Prisma row → *View mappers (shared by every module)
-  llm.ts                 llmStructured(zodSchema, system, user) → T | null (no key/timeout/refusal → null)
+  llm.ts                 llmStructured(zodSchema, system, user) → T | null (no key/timeout/refusal → null; OpenAI Responses API)
   risk.ts                A1 evaluateRisk(vitals, findings) → RiskAssessment            pure
   triage.ts              B1 ruleTriage / llmTriage / mergeTriage                          pure + LLM
   soap.ts                B1 buildSoap / icd10ForText / llmSoap / mergeSoap                pure + LLM
@@ -90,27 +90,14 @@ export function getInsights(now?: Date): Promise<Insights>
 ## Agent pipeline (pillar 2)
 
 ```
-POST /api/agent { patientId, text }            (step trace order shown in the Triage Studio)
-  1 evaluateRisk(vitals, storedFindings + text)  deterministic safety floor & risk score
-  2 stripNegated(text) → cue triage; level = max(rules, risk floor, llm?)   LLM can only escalate
-  3 buildSoap (llm ?? template) + ICD-10 codes   invalid LLM codes dropped
-  4 planAppointment: CRITICAL +30m · HIGH +2h · MODERATE +1d · LOW +7d (rounded to :15)
-  5 prisma.$transaction: TriageSession + SoapNote + Appointment(autoBooked) linked by triageSessionId;
-    Patient.riskScore = max(old, new), flags ∪, outcomeStatus → Critical on CRITICAL
-  → AgentResult { steps[], risk, triage, soap, appointment, patientAfter, source: "llm" | "rules" }
+text (+ patient vitals if patientId)
+  → evaluateRisk(vitals)                         rules, deterministic
+  → triage = max(llmTriage(text) ?? rules, ruleTriage(text, flags))   LLM can only escalate
+  → department → appointment slot: CRITICAL now+30m · HIGH +2h · MODERATE +1d · LOW +7d
+  → buildSoap: llm ?? template; ICD-10 from keyword map
+  → prisma.$transaction: TriageSession + Appointment(autoBooked) + SoapNote
+  → { steps[], triage, appointment, soap, source: "llm" | "rules" }
 ```
-
-## UI (Phase 2)
-
-| Route | Owner | Pillar | Notes |
-|---|---|---|---|
-| `layout.tsx`, `components/nav-links.tsx`, `components/ui.tsx` | L1 (lead) | all | shell, nav, disclaimer banner, shared badges/vitals/flags/cards |
-| `/` | A2 | 1 | KPIs + patients ranked by effective risk, vitals, explainable flags |
-| `/patients/[id]` | A2 | 1 | full vitals, flags, findings, triage history, SOAP notes, appointments |
-| `/agent` | B3 | 2 | presets + free text → POST /api/agent → step trace, SOAP, booking, risk delta |
-| `/insights` | C2 | 3 | recovery vs readmission by protocol, clusters, LOS, outcome/urgency/department mixes |
-
-Pages are Server Components that call `src/lib` directly after `await connection()` (per-request SQLite reads); only the agent workspace is a client component.
 
 ## Risk rules (pillar 1): starting thresholds
 
