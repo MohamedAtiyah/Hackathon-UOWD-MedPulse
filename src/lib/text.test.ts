@@ -35,3 +35,15 @@ test("stored ECG/troponin evidence codes I21.9 instead of R07.9", () => {
   assert.ok(codes.includes("I21.9"));
   assert.ok(!codes.includes("R07.9"));
 });
+
+test("negation scope ends at 'and', so a following positive symptom still escalates", () => {
+  const t = ruleTriage("No fever and crushing chest pain radiating to my left arm", noRisk);
+  assert.equal(t.level, "CRITICAL");
+  assert.equal(t.department, "Cardiology");
+});
+
+test("plain-language breathing failure triages CRITICAL", () => {
+  for (const text of ["I cannot breathe", "unable to breathe, lips going blue"]) {
+    assert.equal(ruleTriage(text, noRisk).level, "CRITICAL", text);
+  }
+});

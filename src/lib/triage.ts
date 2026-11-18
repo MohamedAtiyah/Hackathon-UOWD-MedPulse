@@ -40,7 +40,7 @@ const CUES: Cue[] = [
   cue("CRITICAL", "Emergency Medicine", "Anaphylaxis", /anaphyla|throat (swelling|closing)|tongue swelling/i),
   cue("CRITICAL", "Emergency Medicine", "Unresponsive / seizure", /unresponsive|seizure|convuls/i),
   cue("CRITICAL", "Pulmonology", "Severe respiratory distress",
-    /can'?t breathe|unable to (speak|finish sentences)|can'?t finish sentences|cyanos|blue lips/i),
+    /(?:can'?t|cannot|unable to) (?:breathe|speak|finish sentences)|cyanos|blue lips|lips (?:are |going |turning )?blue/i),
   cue("HIGH", "Cardiology", "Chest pain", /chest pain|chest tightness/i),
   cue("HIGH", "Cardiology", "Syncope / palpitations", /syncope|faint|passed out|palpitation/i),
   cue("HIGH", "Pulmonology", "Dyspnea", /short(ness)? of breath|breathless|dyspn|wheez/i),

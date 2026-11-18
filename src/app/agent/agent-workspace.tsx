@@ -74,6 +74,7 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
     if (running || !text.trim()) return;
     setRunning(true);
     setError(null);
+    setResult(null); // never show a previous run's trace next to a new error
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
