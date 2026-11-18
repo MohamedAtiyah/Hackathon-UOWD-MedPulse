@@ -53,20 +53,16 @@ npm run build
 ## Session Learnings (auto-updated by handoff)
 
 ### Implicit Rules
-- Push: git push origin main:Main (plain git push refused; remote default branch capital Main)
-- Next 16 error.tsx receives { error, retry } (not reset)
-- Smoke test against prod: npm run build then npx next start -p 3100; kill with pkill -f 'next start -p 3100' (exit 144 expected)
-- Reseed after any smoke/browser test: npx prisma db seed (seed wipes + recreates; baseline 6 patients/3 sessions/4 SOAP/5 appts)
-- No ANTHROPIC_API_KEY in .env; offline rule engine is the demo path
-- Playwright artifacts go in .playwright-mcp/ (gitignored)
+- Push: git push origin main:Main; remote default branch Main; do not create lowercase main
+- Command Centre score = effectiveRiskScore = max(stored riskScore, live evaluateRisk score)
+- Reseed after any rehearsal/smoke: npm run db:seed (pristine 6 patients/3 sessions/4 SOAP/5 appts)
+- No ANTHROPIC_API_KEY in .env; demo runs on offline rule engine
 - Commit messages end with Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 
 ### Key Decisions
-- Decision: negation span ends at 'and' — Reason: under-triage of positive after negated item is worse than over-triage of 'denies X and Y'
-- Decision: respiratory CRITICAL cue accepts can't|cannot|unable to + breathe/speak/finish sentences, blue lips variants — Reason: plain-language breathing failure triaged LOW
-- Decision: mobile nav = 3-col grid with icon over label (sm: flex row) — Reason: removes 375px horizontal scroll without hiding labels
-- Decision: root src/app/error.tsx retry card — Reason: DB failure keeps layout + disclaimer, clear UI feedback
-- Decision: agent concurrency race not fixed — Reason: single-user demo load; would need re-read inside transaction
-- Decision: demo script leads with Acute Sepsis Escalation (Brennan) — Reason: only preset showing visible risk escalation 94→100; Okafor already 88
+- Decision: skip pushing origin main (lowercase) — Reason: case-insensitive filesystems collide refs main/Main, breaking fetch for team; default branch Main already serves judges
+- Decision: no seed changes during freeze — Reason: Brennan displayed score derives from vitals (100); lowering stored score would not change Command Centre display and alters clinical story
+- Decision: Kenji Watanabe typed ECG beat as optional visible escalation — Reason: largest on-screen jump 24 LOW → 70 CRITICAL, also reranks Command Centre
+- Decision: DEMO.md says risk bar 100 / rules 100 · stored 94 for Brennan — Reason: presenter must say what screen shows
 
 <!-- handoff:learnings:end -->
