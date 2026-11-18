@@ -1,0 +1,103 @@
+// MedPulse AI — SQLite schema.
+// SQLite has no enums or arrays: enum-like fields are String (allowed values in comments),
+// list/object fields are JSON-encoded String (parse with JSON.parse at the read site).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id                String   @id @default(cuid())
+  mrn               String   @unique
+  name              String
+  age               Int
+  gender            String // "Male" | "Female" | "Other"
+  bloodType         String // "A+" | "O-" | ...
+  chronicConditions String   @default("[]") // JSON string[]
+  vitalsJson        String // JSON { hr, sbp, dbp, spo2, temp, wbc, lactate }
+  riskScore         Int      @default(0) // 0-100
+  flaggedConditions String   @default("[]") // JSON string[]
+  outcomeStatus     String   @default("Stable") // "Improving" | "Stable" | "Critical" | "Readmitted"
+  cohortCategory    String? // matches OutcomeMetric.cohortCategory for insights joins
+  createdAt         DateTime @default(now())
+
+  triageSessions TriageSession[]
+  soapNotes      SoapNote[]
+  appointments   Appointment[]
+
+  @@index([riskScore])
+  @@index([outcomeStatus])
+}
+
+model TriageSession {
+  id                    String   @id @default(cuid())
+  patientId             String
+  rawInput              String
+  urgencyLevel          String // "CRITICAL" | "HIGH" | "MODERATE" | "LOW"
+  flaggedRisks          String   @default("[]") // JSON string[]
+  recommendedDepartment String
+  agentReasoning        String
+  createdAt             DateTime @default(now())
+
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  soapNotes    SoapNote[]
+  appointments Appointment[]
+
+  @@index([patientId])
+  @@index([urgencyLevel])
+}
+
+model SoapNote {
+  id              String   @id @default(cuid())
+  patientId       String
+  rawTranscript   String
+  subjective      String
+  objective       String
+  assessment      String
+  plan            String
+  icd10Codes      String   @default("[]") // JSON string[] e.g. ["A41.9", "R65.20"]
+  triageSessionId String? // the agent run that produced this note
+  createdAt       DateTime @default(now())
+
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  triageSession TriageSession? @relation(fields: [triageSessionId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([triageSessionId])
+}
+
+model Appointment {
+  id              String   @id @default(cuid())
+  patientId       String
+  doctorName      String
+  department      String
+  scheduledAt     DateTime
+  status          String   @default("Scheduled") // "Scheduled" | "Confirmed" | "Completed" | "Cancelled"
+  autoBooked      Boolean  @default(false)
+  triageSessionId String? // the agent run that booked this
+  createdAt       DateTime @default(now())
+
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  triageSession TriageSession? @relation(fields: [triageSessionId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([triageSessionId])
+  @@index([scheduledAt])
+}
+
+model OutcomeMetric {
+  id                String @id @default(cuid())
+  cohortCategory    String
+  treatmentProtocol String
+  recoveryRate      Float // percent 0-100
+  avgLengthOfStay   Float // days
+  readmissionRate   Float // 30-day, percent 0-100
+  sampleSize        Int
+
+  @@unique([cohortCategory, treatmentProtocol])
+}
