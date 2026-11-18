@@ -64,7 +64,7 @@ export function OutcomeBadge({ status }: { status: OutcomeStatus }) {
 export function SourceBadge({ source }: { source: DecisionSource }) {
   return (
     <span
-      title={source === "llm" ? "Claude-assisted (rules remain the safety floor)" : "Deterministic rule engine"}
+      title={source === "llm" ? "LLM-assisted (rules remain the safety floor)" : "Deterministic rule engine"}
       className={cx(
         "inline-flex rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
         source === "llm" ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-600",

@@ -5,7 +5,7 @@
 MedPulse AI turns vitals, clinician findings (including imaging reports) and free-text symptoms into a
 risk-ranked patient list, an urgency decision, an auto-booked specialist slot and a SOAP note with
 ICD-10 codes. A cohort dashboard then shows which protocols and patient groups drive readmissions.
-It runs fully offline on a deterministic rule engine. Claude is optional: it can add nuance and escalate,
+It runs fully offline on a deterministic rule engine. An LLM (OpenAI) is optional: it can add nuance and escalate,
 but it can never lower urgency.
 
 ## What judges will see
@@ -26,7 +26,7 @@ cp .env.example .env && npm run db:push && npm run db:seed
 npm run dev        # http://localhost:3000
 ```
 
-Optional: set `ANTHROPIC_API_KEY` in `.env` to enable Claude-assisted triage and SOAP notes.
+Optional: set `OPENAI_API_KEY` in `.env` (model via `OPENAI_MODEL`, default `gpt-4o-mini`) to enable LLM-assisted triage and SOAP notes.
 Every feature works without it.
 
 ## Architecture
@@ -41,7 +41,7 @@ flowchart LR
     S --> B[booking.ts<br/>specialist slot]
     I[insights.ts<br/>cohort aggregates]
   end
-  T -. optional .-> LLM[(Claude via llm.ts<br/>null on any failure)]
+  T -. optional .-> LLM[(OpenAI via llm.ts<br/>null on any failure)]
   S -. optional .-> LLM
   LIB --> DB[(SQLite via Prisma)]
 ```
@@ -84,7 +84,7 @@ More detail: [ARCHITECTURE.md](ARCHITECTURE.md).
 ## Stack
 
 Next.js 16 (App Router, Cache Components) · React 19 · TypeScript strict · Tailwind CSS 4 · Prisma 6 + SQLite ·
-zod · Anthropic SDK (optional) · lucide-react.
+zod · OpenAI SDK (optional) · lucide-react.
 
 ## Scope and limits
 

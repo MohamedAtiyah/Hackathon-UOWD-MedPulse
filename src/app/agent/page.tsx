@@ -30,7 +30,7 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${llmMode ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-600"}`}
         >
-          {llmMode ? "Claude-assisted · rules as safety floor" : "Offline rule engine"}
+          {llmMode ? "LLM-assisted · rules as safety floor" : "Offline rule engine"}
         </span>
       </PageHeader>
       <AgentWorkspace
