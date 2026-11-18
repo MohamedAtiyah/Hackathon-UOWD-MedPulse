@@ -53,3 +53,6 @@ next-env.d.ts
 
 # Playwright MCP screenshots/snapshots
 /.playwright-mcp/
+
+# Graphify output (regenerate with /graphify)
+graphify-out/

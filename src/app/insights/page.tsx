@@ -49,7 +49,7 @@ export default async function InsightsPage() {
 
         <Card title="Readmission risk clusters" className="lg:col-span-2">
           {top ? (
-            <p className="mb-4 text-sm text-slate-700">
+            <p className="mb-4 text-sm text-zinc-700">
               <strong>{top.cohortCategory}</strong> has the highest 30-day readmission at {top.readmissionRate}%{topLive}.
             </p>
           ) : (
@@ -62,13 +62,13 @@ export default async function InsightsPage() {
                 <div key={tier}>
                   <TierPill tier={tier} />
                   {group.length === 0 ? (
-                    <p className="mt-2 text-sm text-slate-500">No cohorts</p>
+                    <p className="mt-2 text-sm text-zinc-500">No cohorts</p>
                   ) : (
                     <ul className="mt-2 space-y-2">
                       {group.map((c) => (
                         <li key={c.id} className="text-sm">
-                          <p className="font-medium text-slate-900">{c.cohortCategory}</p>
-                          <p className="text-xs text-slate-600">
+                          <p className="font-medium text-zinc-900">{c.cohortCategory}</p>
+                          <p className="text-xs text-zinc-600">
                             {c.readmissionRate}% readmit · {c.livePatients} live
                             {c.liveAvgRisk != null && (
                               <>
@@ -88,7 +88,7 @@ export default async function InsightsPage() {
         </Card>
 
         <Card title="Average length of stay">
-          <ColumnChart cols={cohorts.map((c) => ({ label: c.cohortCategory, value: c.avgLengthOfStay }))} unit=" d" bar="bg-slate-500" />
+          <ColumnChart cols={cohorts.map((c) => ({ label: c.cohortCategory, value: c.avgLengthOfStay }))} unit=" d" bar="bg-zinc-500" />
         </Card>
 
         <Card title="Live patient outcome status">
@@ -112,9 +112,9 @@ export default async function InsightsPage() {
                 <div key={b.level}>
                   <div className="flex items-center justify-between">
                     <SeverityBadge level={b.level} />
-                    <span className="text-2xl font-semibold tabular-nums text-slate-900">{b.people.length}</span>
+                    <span className="text-2xl font-semibold tabular-nums text-zinc-900">{b.people.length}</span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-600">{b.people.map((p) => p.name).join(", ") || "None"}</p>
+                  <p className="mt-2 text-xs text-zinc-600">{b.people.map((p) => p.name).join(", ") || "None"}</p>
                 </div>
               ))}
             </div>

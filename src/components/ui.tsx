@@ -19,7 +19,7 @@ export const scoreLevel = (score: number): UrgencyLevel =>
 export function SeverityBadge({ level, className }: { level: UrgencyLevel; className?: string }) {
   const s = SEVERITY_STYLES[level];
   return (
-    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset", s.badge, className)}>
+    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide ring-1 ring-inset", s.badge, className)}>
       <span className={cx("size-1.5 rounded-full", s.dot)} aria-hidden />
       {level}
     </span>
@@ -31,14 +31,14 @@ export function RiskScoreBar({ score, className }: { score: number; className?: 
   return (
     <div className={cx("flex items-center gap-2", className)}>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-slate-100"
+        className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-inset ring-zinc-200/60"
         role="meter"
         aria-label="Risk score"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={score}
       >
-        <div className={cx("h-full rounded-full", s.bar)} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
+        <div className={cx("h-full rounded-full transition-[width] duration-500 ease-out", s.bar)} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
       </div>
       <span className={cx("w-8 text-right text-sm font-semibold tabular-nums", s.text)}>{score}</span>
     </div>
@@ -55,7 +55,7 @@ const OUTCOME_STYLES: Record<OutcomeStatus, string> = {
 
 export function OutcomeBadge({ status }: { status: OutcomeStatus }) {
   return (
-    <span className={cx("inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", OUTCOME_STYLES[status])}>
+    <span className={cx("inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset", OUTCOME_STYLES[status])}>
       {status}
     </span>
   );
@@ -66,8 +66,8 @@ export function SourceBadge({ source }: { source: DecisionSource }) {
     <span
       title={source === "llm" ? "LLM-assisted (rules remain the safety floor)" : "Deterministic rule engine"}
       className={cx(
-        "inline-flex rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
-        source === "llm" ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-600",
+        "inline-flex rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset",
+        source === "llm" ? "bg-violet-50 text-violet-700 ring-violet-600/20" : "bg-zinc-50 text-zinc-600 ring-zinc-500/20",
       )}
     >
       {source === "llm" ? "LLM" : "Rules"}
@@ -78,10 +78,10 @@ export function SourceBadge({ source }: { source: DecisionSource }) {
 // ── Layout primitives ───────────────────────────────────────────────────────
 export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: string; children?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px] sm:leading-9">{title}</h1>
+        {subtitle && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-500">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -100,10 +100,10 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={cx("rounded-xl border border-slate-200 bg-white shadow-sm", className)}>
+    <section className={cx("rounded-xl border border-zinc-200/80 bg-white shadow-[0_1px_2px_rgb(0_0_0/0.04)]", className)}>
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
-          {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
+        <header className="flex items-center justify-between gap-3 rounded-t-xl border-b border-zinc-200/70 bg-zinc-50/60 px-5 py-3">
+          {title && <h2 className="text-sm font-semibold tracking-tight text-zinc-900">{title}</h2>}
           {action}
         </header>
       )}
@@ -123,12 +123,12 @@ export function StatTile({
   hint?: string;
   tone?: "slate" | "red" | "orange" | "teal" | "purple";
 }) {
-  const toneText = { slate: "text-slate-900", red: "text-red-600", orange: "text-orange-600", teal: "text-teal-700", purple: "text-purple-700" }[tone];
+  const toneText = { slate: "text-zinc-900", red: "text-red-600", orange: "text-orange-600", teal: "text-teal-700", purple: "text-purple-700" }[tone];
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={cx("mt-1 text-3xl font-semibold tabular-nums", toneText)}>{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</p>
+      <p className={cx("mt-1.5 text-3xl font-semibold tracking-tight tabular-nums", toneText)}>{value}</p>
+      {hint && <p className="mt-1 text-xs text-zinc-500">{hint}</p>}
     </div>
   );
 }
@@ -169,13 +169,13 @@ export function VitalsGrid({ vitals, compact = false }: { vitals: Vitals; compac
             key={d.key}
             className={cx(
               "rounded-lg border px-2.5 py-1.5",
-              bad ? "border-red-200 bg-red-50" : "border-slate-200 bg-slate-50",
+              bad ? "border-red-200 bg-red-50" : "border-zinc-200/80 bg-zinc-50/70",
             )}
           >
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{d.label}</dt>
-            <dd className={cx("font-semibold tabular-nums", compact ? "text-sm" : "text-lg", bad ? "text-red-700" : "text-slate-900")}>
+            <dt className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{d.label}</dt>
+            <dd className={cx("font-semibold tabular-nums", compact ? "text-sm" : "text-lg", bad ? "text-red-700" : "text-zinc-900")}>
               {value ?? "—"}
-              {!compact && value != null && <span className="ml-1 text-xs font-normal text-slate-500">{d.unit}</span>}
+              {!compact && value != null && <span className="ml-1 text-xs font-normal text-zinc-500">{d.unit}</span>}
               {bad && <span className="sr-only"> (abnormal)</span>}
             </dd>
           </div>
@@ -186,17 +186,17 @@ export function VitalsGrid({ vitals, compact = false }: { vitals: Vitals; compac
 }
 
 export function RiskFlagList({ flags, empty = "No rule-based red flags." }: { flags: RiskFlag[]; empty?: string }) {
-  if (!flags.length) return <p className="text-sm text-slate-500">{empty}</p>;
+  if (!flags.length) return <p className="text-sm text-zinc-500">{empty}</p>;
   return (
     <ul className="space-y-2">
       {flags.map((f, i) => (
         <li key={`${f.category}-${f.label}-${i}`} className="flex items-start gap-3">
           <SeverityBadge level={f.severity} className="mt-0.5 shrink-0" />
           <div className="min-w-0 text-sm">
-            <p className="font-medium text-slate-900">
-              {f.label} <span className="font-mono text-[10px] font-normal uppercase text-slate-400">{f.category}</span>
+            <p className="font-medium text-zinc-900">
+              {f.label} <span className="font-mono text-[10px] font-normal uppercase text-zinc-400">{f.category}</span>
             </p>
-            <p className="text-slate-600">{f.reason}</p>
+            <p className="text-zinc-600">{f.reason}</p>
           </div>
         </li>
       ))}

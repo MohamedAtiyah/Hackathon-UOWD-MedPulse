@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Patient" };
 const nowMs = () => Date.now();
 
 const Chip = ({ children, mono }: { children: React.ReactNode; mono?: boolean }) => (
-  <span className={`rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700 ${mono ? "font-mono" : ""}`}>{children}</span>
+  <span className={`rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 ${mono ? "font-mono" : ""}`}>{children}</span>
 );
 
 export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +23,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
   const now = nowMs();
   const sessionIds = new Set(p.triageSessions.map((s) => s.id));
   const sessions = [...p.triageSessions].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const empty = (t: string) => <p className="text-sm text-slate-500">{t}</p>;
+  const empty = (t: string) => <p className="text-sm text-zinc-500">{t}</p>;
 
   return (
     <>
@@ -32,10 +32,10 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       </Link>
       <div className="mb-6 mt-3 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-900">
             {p.name} <SeverityBadge level={level} /> <OutcomeBadge status={p.outcomeStatus} />
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-zinc-500">
             {p.mrn} · {p.age}y · {p.gender} · {p.bloodType}
             {p.cohortCategory && ` · ${p.cohortCategory}`}
           </p>
@@ -73,7 +73,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
         </Card>
         <Card title="Documented findings">
           {p.flaggedConditions.length ? (
-            <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
+            <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700">
               {p.flaggedConditions.map((f) => (
                 <li key={f}>{f}</li>
               ))}
@@ -89,7 +89,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           {p.appointments.length ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[32rem] text-left text-sm">
-                <thead className="text-xs uppercase text-slate-500">
+                <thead className="text-xs uppercase text-zinc-500">
                   <tr>
                     <th className="pb-2 pr-3 font-medium">Date</th>
                     <th className="pb-2 pr-3 font-medium">Department</th>
@@ -97,7 +97,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                     <th className="pb-2 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-zinc-100">
                   {p.appointments.map((a) => {
                     const upcoming = new Date(a.scheduledAt).getTime() >= now && a.status !== "Cancelled" && a.status !== "Completed";
                     return (
@@ -129,14 +129,14 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           {sessions.length ? (
             <div className="space-y-4">
               {sessions.map((s) => (
-                <article key={s.id} className="rounded-lg border border-slate-200 p-4">
+                <article key={s.id} className="rounded-lg border border-zinc-200 p-4">
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <SeverityBadge level={s.urgencyLevel} />
-                    <span className="font-medium text-slate-900">→ {s.recommendedDepartment}</span>
-                    <span className="text-xs text-slate-500">{formatDateTime(s.createdAt)}</span>
+                    <span className="font-medium text-zinc-900">→ {s.recommendedDepartment}</span>
+                    <span className="text-xs text-zinc-500">{formatDateTime(s.createdAt)}</span>
                   </div>
-                  <blockquote className="mt-2 border-l-2 border-slate-300 pl-3 text-sm italic text-slate-600">{s.rawInput}</blockquote>
-                  <p className="mt-2 text-sm text-slate-700">{s.agentReasoning}</p>
+                  <blockquote className="mt-2 border-l-2 border-zinc-300 pl-3 text-sm italic text-zinc-600">{s.rawInput}</blockquote>
+                  <p className="mt-2 text-sm text-zinc-700">{s.agentReasoning}</p>
                   {s.flaggedRisks.length > 0 && (
                     <ul className="mt-2 flex flex-wrap gap-1.5">
                       {s.flaggedRisks.map((r) => (
@@ -158,9 +158,9 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           {p.soapNotes.length ? (
             <div className="space-y-4">
               {p.soapNotes.map((n) => (
-                <article key={n.id} id={n.id} className="scroll-mt-20 rounded-lg border border-slate-200 p-4">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <a href={`#${n.id}`} className="font-medium text-slate-700 hover:underline">
+                <article key={n.id} id={n.id} className="scroll-mt-20 rounded-lg border border-zinc-200 p-4">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                    <a href={`#${n.id}`} className="font-medium text-zinc-700 hover:underline">
                       {formatDateTime(n.createdAt)}
                     </a>
                     {n.triageSessionId && sessionIds.has(n.triageSessionId) && <span>from triage run</span>}
@@ -180,8 +180,8 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                       ] as const
                     ).map(([k, v]) => (
                       <div key={k}>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{k}</dt>
-                        <dd className="mt-0.5 whitespace-pre-line text-slate-700">{v}</dd>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{k}</dt>
+                        <dd className="mt-0.5 whitespace-pre-line text-zinc-700">{v}</dd>
                       </div>
                     ))}
                   </dl>

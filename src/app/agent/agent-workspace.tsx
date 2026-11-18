@@ -96,7 +96,7 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
       <div className="lg:sticky lg:top-6">
         <Card title="Scenario input">
           <div className="mb-4">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Quick-fill scenarios</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">Quick-fill scenarios</p>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {PRESETS.map((p) => {
                 const match = patients.find((x) => x.name.toLowerCase().includes(p.patient.toLowerCase()));
@@ -106,13 +106,13 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
                     type="button"
                     disabled={!match || running}
                     onClick={() => match && (setPatientId(match.id), setText(p.text))}
-                    className={`rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-teal-400 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50 ${focus}`}
+                    className={`rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-left text-sm shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-colors hover:border-teal-400 hover:bg-teal-50/60 disabled:cursor-not-allowed disabled:opacity-50 ${focus}`}
                   >
-                    <span className="flex items-center gap-2 font-medium text-slate-900">
+                    <span className="flex items-center gap-2 font-medium text-zinc-900">
                       <span className={`size-2 shrink-0 rounded-full ${p.dot}`} aria-hidden />
                       {p.title}
                     </span>
-                    <span className="block pl-4 text-xs text-slate-500">{match ? match.name : `${p.patient} (not found)`}</span>
+                    <span className="block pl-4 text-xs text-zinc-500">{match ? match.name : `${p.patient} (not found)`}</span>
                   </button>
                 );
               })}
@@ -120,14 +120,14 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
           </div>
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label htmlFor="patient" className="mb-1 block text-sm font-medium text-slate-700">
+              <label htmlFor="patient" className="mb-1 block text-sm font-medium text-zinc-700">
                 Patient
               </label>
               <select
                 id="patient"
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
-                className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ${focus}`}
+                className={`w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm ${focus}`}
               >
                 {patients.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -137,7 +137,7 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
               </select>
             </div>
             <div>
-              <label htmlFor="text" className="mb-1 block text-sm font-medium text-slate-700">
+              <label htmlFor="text" className="mb-1 block text-sm font-medium text-zinc-700">
                 Symptoms or clinician transcript
               </label>
               <textarea
@@ -147,14 +147,14 @@ export function AgentWorkspace({ patients, initialPatientId }: { patients: Patie
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Describe symptoms, or paste a transcript…"
-                className={`w-full rounded-lg border border-slate-300 px-3 py-2 text-sm ${focus}`}
+                className={`w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm ${focus}`}
               />
-              <p className="mt-1 text-right text-xs tabular-nums text-slate-500">{text.length} / 4000</p>
+              <p className="mt-1 text-right text-xs tabular-nums text-zinc-500">{text.length} / 4000</p>
             </div>
             <button
               type="submit"
               disabled={running || !text.trim() || !patientId}
-              className={`inline-flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50 ${focus}`}
+              className={`inline-flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-700 active:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50 ${focus}`}
             >
               {running ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Bot className="size-4" aria-hidden />}
               Run triage agent
@@ -184,7 +184,7 @@ function Pending() {
       </p>
       <ol className="space-y-2">
         {STAGES.map((s) => (
-          <li key={s} className="flex items-center gap-3 text-sm text-slate-600">
+          <li key={s} className="flex items-center gap-3 text-sm text-zinc-600">
             <LoaderCircle className="size-4 shrink-0 animate-spin text-teal-600" aria-hidden />
             {s}
           </li>
@@ -199,8 +199,8 @@ function Empty() {
     <Card>
       <div className="flex items-start gap-3">
         <Sparkles className="mt-0.5 size-5 shrink-0 text-teal-600" aria-hidden />
-        <div className="text-sm text-slate-600">
-          <p className="font-semibold text-slate-900">One input, four autonomous stages</p>
+        <div className="text-sm text-zinc-600">
+          <p className="font-semibold text-zinc-900">One input, four autonomous stages</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>Triage: parse symptoms (negation-aware) and set urgency over a deterministic safety floor.</li>
             <li>SOAP: draft a structured note with ICD-10 codes.</li>
@@ -228,38 +228,38 @@ function Results({ r }: { r: AgentResult }) {
       <Card title="Agent step trace" action={<SourceBadge source={r.source} />}>
         <ol>
           {r.steps.map((s, i) => (
-            <li key={s.name} className="relative flex gap-3 pb-5 last:pb-0">
-              {i < r.steps.length - 1 && <span className="absolute left-[13px] top-7 h-[calc(100%-1.75rem)] w-px bg-teal-200" aria-hidden />}
-              <span className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-semibold text-white">
+            <li key={s.name} className="relative flex gap-3 pb-6 last:pb-0">
+              {i < r.steps.length - 1 && <span className="absolute left-[13px] top-8 h-[calc(100%-2rem)] w-px bg-zinc-200" aria-hidden />}
+              <span className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-semibold tabular-nums text-white ring-4 ring-teal-50">
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <p className="text-sm font-medium text-slate-900">{s.label}</p>
-                  <CircleCheck className="size-4 text-teal-600" aria-label="Done" />
+                  <p className="text-sm font-medium tracking-tight text-zinc-900">{s.label}</p>
+                  <CircleCheck className="size-4 text-emerald-600" aria-label="Done" />
                   <SourceBadge source={s.source} />
-                  <span className="ml-auto text-xs tabular-nums text-slate-500">{s.durationMs} ms</span>
+                  <span className="ml-auto font-mono text-xs tabular-nums text-zinc-400">{s.durationMs} ms</span>
                 </div>
-                <p className="mt-0.5 break-words text-sm text-slate-600">{s.detail}</p>
+                <p className="mt-1 break-words text-sm leading-relaxed text-zinc-600">{s.detail}</p>
               </div>
             </li>
           ))}
         </ol>
-        <p className="mt-4 border-t border-slate-100 pt-3 text-right text-xs text-slate-500">
-          Total <span className="font-semibold tabular-nums text-slate-700">{total} ms</span>
+        <p className="mt-5 border-t border-zinc-200/70 pt-3 text-right text-xs text-zinc-500">
+          Total <span className="font-semibold tabular-nums text-zinc-700">{total} ms</span>
         </p>
       </Card>
 
       <Card>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+          <div className="flex items-center gap-2 text-sm font-medium text-zinc-900">
             <SeverityBadge level={triage.level} />
-            <ArrowRight className="size-4 text-slate-400" aria-hidden />
+            <ArrowRight className="size-4 text-zinc-400" aria-hidden />
             <Stethoscope className="size-4 text-teal-600" aria-hidden />
             {triage.department}
           </div>
-          <div className="flex min-w-48 flex-1 items-center gap-3 text-sm text-slate-600">
-            <span className="whitespace-nowrap tabular-nums">
+          <div className="flex min-w-48 flex-1 items-center gap-3 text-sm text-zinc-600">
+            <span className="whitespace-nowrap font-medium tabular-nums text-zinc-900">
               Risk {patientAfter.previousRiskScore} → {patientAfter.riskScore}
             </span>
             <RiskScoreBar score={patientAfter.riskScore} className="flex-1" />
@@ -276,7 +276,7 @@ function Results({ r }: { r: AgentResult }) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card title="Triage reasoning" action={<SourceBadge source={triage.source} />}>
-          <p className="text-sm text-slate-700">{triage.reasoning}</p>
+          <p className="text-sm text-zinc-700">{triage.reasoning}</p>
           {triage.flaggedRisks.length > 0 && (
             <ul className="mt-3 flex flex-wrap gap-1.5">
               {triage.flaggedRisks.map((f) => (
@@ -287,21 +287,29 @@ function Results({ r }: { r: AgentResult }) {
             </ul>
           )}
         </Card>
-        <Card title="Risk flags" action={<span className="text-xs font-semibold tabular-nums text-slate-600">Score {r.risk.score}</span>}>
+        <Card title="Risk flags" action={<span className="text-xs font-semibold tabular-nums text-zinc-600">Score {r.risk.score}</span>}>
           <RiskFlagList flags={r.risk.flags} />
         </Card>
       </div>
 
       <Card
+        className="border-emerald-200/80 bg-emerald-50/30"
         title={
           <span className="flex items-center gap-2">
-            <CalendarCheck className="size-4 text-teal-600" aria-hidden /> Booked appointment
+            <CalendarCheck className="size-4 text-emerald-600" aria-hidden /> Booked appointment
           </span>
         }
-        action={a.autoBooked && <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-600/20">Auto-booked</span>}
+        action={
+          a.autoBooked && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+              <CircleCheck className="size-3" aria-hidden />
+              Auto-booked
+            </span>
+          )
+        }
       >
-        <p className="text-sm font-medium text-slate-900">{a.doctorName}</p>
-        <p className="text-sm text-slate-600">
+        <p className="text-base font-semibold tracking-tight text-zinc-900">{a.doctorName}</p>
+        <p className="mt-0.5 text-sm tabular-nums text-zinc-600">
           {a.department} · {formatDateTime(a.scheduledAt)} · {a.status}
         </p>
       </Card>
@@ -317,7 +325,7 @@ function Results({ r }: { r: AgentResult }) {
         {soap.icd10Codes.length > 0 && (
           <ul className="mb-4 flex flex-wrap gap-1.5">
             {soap.icd10Codes.map((c) => (
-              <li key={c} className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700">
+              <li key={c} className="rounded bg-zinc-100 px-2 py-0.5 font-mono text-xs text-zinc-700">
                 {c}
               </li>
             ))}
@@ -326,12 +334,12 @@ function Results({ r }: { r: AgentResult }) {
         <dl className="space-y-3 text-sm">
           {sections.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{k}</dt>
-              <dd className="mt-0.5 whitespace-pre-line text-slate-700">{v}</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{k}</dt>
+              <dd className="mt-0.5 whitespace-pre-line text-zinc-700">{v}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-4 text-xs italic text-slate-500">Draft — requires clinician review</p>
+        <p className="mt-4 text-xs italic text-zinc-500">Draft — requires clinician review</p>
       </Card>
     </>
   );

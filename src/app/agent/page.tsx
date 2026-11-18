@@ -28,7 +28,7 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
         subtitle="Free-text symptoms or a clinician transcript → urgency triage → SOAP note with ICD-10 → auto-booked specialist slot, persisted to the record."
       >
         <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${llmMode ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-600"}`}
+          className={`rounded-full px-3 py-1 text-xs font-medium ${llmMode ? "bg-violet-100 text-violet-700" : "bg-zinc-100 text-zinc-600"}`}
         >
           {llmMode ? "LLM-assisted · rules as safety floor" : "Offline rule engine"}
         </span>

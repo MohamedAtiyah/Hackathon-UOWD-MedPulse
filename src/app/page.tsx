@@ -30,7 +30,7 @@ export default async function CommandCentre() {
         <StatTile label="Agent triage runs" value={t.triageSessions} />
       </div>
 
-      <p className="mb-3 text-xs text-slate-500">
+      <p className="mb-3 text-xs text-zinc-500">
         Score shown = effective risk, the higher of the stored clinician score and the live rule-engine score. Left
         border and badge show urgency.
       </p>
@@ -41,29 +41,29 @@ export default async function CommandCentre() {
           const flags = p.risk.flags.slice(0, 2);
           const more = p.risk.flags.length - flags.length;
           return (
-            <li key={p.id} className={`rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm ${BORDER[level]}`}>
+            <li key={p.id} className={`rounded-xl border border-l-4 border-zinc-200/80 bg-white p-4 shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-shadow hover:shadow-md ${BORDER[level]}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-base font-semibold text-slate-900">
-                    <span className="mr-2 font-mono text-sm text-slate-400">#{i + 1}</span>
-                    <Link href={`/patients/${p.id}`} className="text-teal-700 hover:underline">
+                  <h2 className="text-base font-semibold tracking-tight text-zinc-900">
+                    <span className="mr-2 font-mono text-sm text-zinc-400">#{i + 1}</span>
+                    <Link href={`/patients/${p.id}`} className="text-teal-700 underline-offset-4 hover:underline">
                       {p.name}
                     </Link>
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-zinc-500">
                     {p.mrn} · {p.age}y · {p.gender} · {p.bloodType}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <SeverityBadge level={level} />
                   <OutcomeBadge status={p.outcomeStatus} />
-                  {p.cohortCategory && <span className="text-xs text-slate-500">{p.cohortCategory}</span>}
+                  {p.cohortCategory && <span className="text-xs text-zinc-500">{p.cohortCategory}</span>}
                 </div>
               </div>
 
               <div className="mt-3 max-w-md">
                 <RiskScoreBar score={p.effectiveRiskScore} />
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-zinc-500">
                   rules {p.risk.score} · stored {p.riskScore}
                 </p>
               </div>
@@ -76,14 +76,14 @@ export default async function CommandCentre() {
                 {flags.length > 0 ? (
                   <ul className="space-y-1">
                     {flags.map((f, j) => (
-                      <li key={j} className="text-slate-600">
+                      <li key={j} className="text-zinc-600">
                         <span className={`font-semibold ${SEVERITY_STYLES[f.severity].text}`}>{f.label}</span>: {f.reason}
                       </li>
                     ))}
-                    {more > 0 && <li className="text-slate-500">+{more} more</li>}
+                    {more > 0 && <li className="text-zinc-500">+{more} more</li>}
                   </ul>
                 ) : p.flaggedConditions.length > 0 ? (
-                  <p className="text-slate-600">
+                  <p className="text-zinc-600">
                     <span className="font-semibold">Documented:</span> {p.flaggedConditions[0]}
                   </p>
                 ) : null}
@@ -92,7 +92,7 @@ export default async function CommandCentre() {
               <div className="mt-3">
                 <Link
                   href={`/agent?patientId=${p.id}`}
-                  className="inline-flex rounded-lg border border-teal-600 px-3 py-1 text-xs font-semibold text-teal-700 hover:bg-teal-50"
+                  className="inline-flex rounded-lg border border-teal-600/80 bg-white px-3 py-1 text-xs font-semibold text-teal-700 transition-colors hover:bg-teal-50"
                 >
                   Run triage agent<span className="sr-only"> for {p.name}</span>
                 </Link>
