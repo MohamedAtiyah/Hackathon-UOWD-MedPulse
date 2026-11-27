@@ -186,6 +186,7 @@ function evaluateRisk(vitals, findings = []) {
 const cue = (level, department, label, ...tests) => ({ level, department, label, tests });
 const CUES = [
   cue("CRITICAL", "Cardiology", "Acute coronary syndrome pattern", /chest (pain|pressure|tightness)|crushing/i, /radiat|jaw|left arm|sweat|diaphore|nause|short of breath/i),
+  cue("CRITICAL", "Cardiology", "Crushing chest pain", /crushing/i, /chest/i),
   cue("CRITICAL", "Neurology", "Stroke warning signs (FAST)", /facial droop|slurred speech|one-sided weakness|arm weakness|sudden confusion and weakness/i),
   cue("CRITICAL", "Critical Care", "Suspected sepsis", /confus|drowsy|altered/i, /fever|febrile|rigors|chills/i),
   cue("CRITICAL", "Emergency Medicine", "Anaphylaxis", /anaphyla|throat (swelling|closing)|tongue swelling/i),

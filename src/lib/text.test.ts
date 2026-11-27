@@ -42,6 +42,13 @@ test("negation scope ends at 'and', so a following positive symptom still escala
   assert.equal(t.department, "Cardiology");
 });
 
+test("bare 'no fever and crushing chest pain' still triages CRITICAL", () => {
+  const t = ruleTriage("no fever and crushing chest pain", noRisk);
+  assert.equal(t.level, "CRITICAL");
+  assert.equal(t.department, "Cardiology");
+  assert.notEqual(ruleTriage("no chest pain, crushing fatigue", noRisk).level, "CRITICAL");
+});
+
 test("plain-language breathing failure triages CRITICAL", () => {
   for (const text of ["I cannot breathe", "unable to breathe, lips going blue"]) {
     assert.equal(ruleTriage(text, noRisk).level, "CRITICAL", text);

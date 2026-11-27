@@ -86,7 +86,7 @@ More detail: [ARCHITECTURE.md](ARCHITECTURE.md).
 2. **The LLM can only escalate.** Final urgency = `max(rule level, LLM level)`, and the department follows the
    LLM only when it escalates. Unit-tested in `src/lib/triage.test.ts`.
 3. **Negation-aware.** "no wheeze today" is ignored and shown in the trace. Negation stops at a comma, "but"
-   or "and", so "no fever and crushing chest pain radiating to my left arm" still triages CRITICAL.
+   or "and", so "no fever and crushing chest pain" still triages CRITICAL.
 4. **Explainable.** Every flag carries its triggering value, and every agent step shows its source
    (`RULES` or `LLM`) and timing.
 5. **Safe failure.** Invalid input returns 400, an unknown patient returns 404, and any LLM failure falls back to
