@@ -56,7 +56,7 @@ npm run build
 - Stack: Next.js 16.4.6, React 19.3, Tailwind 4, TS strict, Prisma 6.19.3 SQLite, zod 4, openai SDK, tsx tests via node:test
 - Inside src/lib import siblings relatively ('./types') so tsx tests resolve; src/app uses '@/lib/...'
 - Route handlers thin: req.json try/catch → zod parse → lib → Response.json; errors { error } 400/404/500
-- Env: DATABASE_URL required; OPENAI_API_KEY optional; OPENAI_MODEL, LLM_TIMEOUT_MS, STORAGE_BUCKET optional
+- Env: DATABASE_URL required; OPENAI_API_KEY optional; OPENAI_MODEL, LLM_TIMEOUT_MS optional
 - Reset demo data: npx prisma db seed (idempotent); smoke tests mutate DB so reseed after
 - Every keyword matcher must call stripNegated first
 

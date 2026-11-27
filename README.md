@@ -1,6 +1,18 @@
 # MedPulse AI: Clinical Command Centre
 
+[![CI](https://github.com/MohamedAtiyah/Hackathon-UOWD-MedPulse/actions/workflows/ci.yml/badge.svg)](https://github.com/MohamedAtiyah/Hackathon-UOWD-MedPulse/actions/workflows/ci.yml)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Prisma SQLite](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 > **Clinical decision support, not a diagnosis.** All patient data is synthetic.
+
+**[▶ Try the live demo](https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/)** (runs in your browser, no sign-up)
+
+[![MedPulse AI Triage Studio: a cardiac scenario triaged CRITICAL with the agent step trace, risk flags and an auto-booked cardiology slot](docs/screenshot.png)](https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/)
+
+Built for the UOWD Hackathon, Medical AI track.
 
 MedPulse AI turns vitals, clinician findings (including imaging reports) and free-text symptoms into a
 risk-ranked patient list, an urgency decision, an auto-booked specialist slot and a SOAP note with
@@ -8,15 +20,25 @@ ICD-10 codes. A cohort dashboard then shows which protocols and patient groups d
 It runs fully offline on a deterministic rule engine. An LLM (OpenAI) is optional: it can add nuance and escalate,
 but it can never lower urgency.
 
-## What judges will see
+## What this project demonstrates
 
-| Track requirement | Route | What it does |
+- **Safety-floor AI design:** a deterministic rule engine sets the minimum urgency, and the LLM can only escalate it, never lower it.
+- **A traced agent pipeline:** risk → triage → SOAP + ICD-10 → booking, with every step timed and labelled, saved in one database transaction.
+- **Validated LLM output:** OpenAI structured outputs are checked with zod, and any failure falls back to the rules.
+- **Full-stack TypeScript:** Next.js 16 Server Components, thin API routes, Prisma + SQLite.
+- **Tested logic:** pure `src/lib` modules with unit tests, run with lint, typecheck and build in CI.
+
+The [live demo](https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/) is a browser port of the rule engine. The full app is Next.js + Prisma + OpenAI.
+
+## Features
+
+| Capability | Route | What it does |
 |---|---|---|
 | **Diagnostic support**: flag risks/conditions from patient data and imaging | `/` Command Centre, `/patients/[id]` | Re-scores every patient on load from vitals plus documented findings (sepsis/SIRS, ACS markers, hypoxaemia, lactate, imaging red flags). Each flag shows the rule and value that triggered it. |
 | **Agentic AI assistant**: triage symptoms, book appointments, summarise SOAP notes | `/agent` Triage Studio | One input runs a 5-step traced agent: safety floor → negation-aware triage → SOAP + ICD-10 → specialist booking → saved to the record. Four one-click scenarios. |
 | **Clinical insights**: spot patterns in patient outcomes | `/insights` Outcomes Insights | Protocol recovery vs 30-day readmission, readmission risk clusters, length of stay, live urgency mix, department load and risk distribution. |
 
-The 2-minute judging script is in [docs/DEMO.md](docs/DEMO.md).
+A 2-minute walkthrough is in [docs/DEMO.md](docs/DEMO.md).
 
 ## Quickstart
 

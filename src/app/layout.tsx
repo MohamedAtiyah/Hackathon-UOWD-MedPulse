@@ -19,7 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col text-zinc-900">
         <div role="note" className="border-b border-amber-200/70 bg-amber-50/80 px-4 py-1.5 text-center text-xs leading-relaxed text-amber-900">
-          <ShieldAlert className="mr-1.5 inline size-3.5 -tranzinc-y-px" aria-hidden />
+          <ShieldAlert className="mr-1.5 inline size-3.5 -translate-y-px" aria-hidden />
           <strong className="font-semibold">Clinical decision support, not a diagnosis.</strong> All patients are
           synthetic. Every flag, triage level and SOAP draft requires clinician review.
         </div>

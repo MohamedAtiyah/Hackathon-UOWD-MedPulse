@@ -34,6 +34,8 @@ const CUES: Cue[] = [
   cue("CRITICAL", "Cardiology", "Acute coronary syndrome pattern",
     /chest (pain|pressure|tightness)|crushing/i,
     /radiat|jaw|left arm|sweat|diaphore|nause|short of breath/i),
+  // "Crushing" chest pain is a classic ACS descriptor on its own; over-triage beats a missed MI.
+  cue("CRITICAL", "Cardiology", "Crushing chest pain", /crushing/i, /chest/i),
   cue("CRITICAL", "Neurology", "Stroke warning signs (FAST)",
     /facial droop|slurred speech|one-sided weakness|arm weakness|sudden confusion and weakness/i),
   cue("CRITICAL", "Critical Care", "Suspected sepsis", /confus|drowsy|altered/i, /fever|febrile|rigors|chills/i),

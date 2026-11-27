@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MedPulse AI · Interactive Demo</title>
 <meta name="description" content="Interactive, in-browser demo of MedPulse AI: risk-ranked patients, an agentic triage trace with SOAP + ICD-10 and auto-booking, and outcome insights. Synthetic data only.">
+<link rel="canonical" href="https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="MedPulse AI · Agentic clinical triage demo">
+<meta property="og:description" content="Symptoms in, urgency + SOAP note with ICD-10 + booked specialist out. A rule-based safety floor that the LLM can only escalate. Try it in your browser (synthetic data).">
+<meta property="og:url" content="https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/">
+<meta property="og:image" content="https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="MedPulse AI Triage Studio showing a CRITICAL cardiac triage with agent step trace">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MedPulse AI · Agentic clinical triage demo">
+<meta name="twitter:description" content="Rule-based safety floor + LLM that can only escalate. Interactive browser demo, synthetic data.">
+<meta name="twitter:image" content="https://mohamedatiyah.github.io/Hackathon-UOWD-MedPulse/og-image.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M5 17h6l3-7 4 12 3-5h6' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,20 +68,28 @@
   </div>
 </header>
 
-<div class="mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6">
-  <p class="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-teal-200/80 bg-teal-50/80 px-3 py-1 text-xs font-medium text-teal-800">
-    <span class="font-semibold">Interactive GitHub Pages Demo</span>
-    <span aria-hidden="true">·</span>
-    <span>Full Next.js + Prisma + OpenAI source in repo</span>
-  </p>
-</div>
+<section aria-labelledby="hero-title" class="mx-auto mt-6 w-full max-w-7xl px-4 sm:px-6">
+  <div class="rounded-2xl border border-zinc-200/90 bg-white/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur sm:p-7">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0 max-w-3xl">
+        <h1 id="hero-title" class="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">MedPulse <span class="text-teal-600">AI</span></h1>
+        <p class="mt-2 text-sm leading-relaxed text-zinc-700 sm:text-base">An agentic clinical triage assistant: free-text symptoms in, urgency, SOAP note with ICD-10 codes and a booked specialist slot out, over a deterministic safety floor the LLM can only escalate.</p>
+        <p class="mt-2 text-xs leading-relaxed text-zinc-600">This page is a browser port of the rule engine. The full app is Next.js + Prisma + OpenAI.</p>
+      </div>
+      <a href="https://github.com/MohamedAtiyah/Hackathon-UOWD-MedPulse" class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700">
+        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+        View source on GitHub
+      </a>
+    </div>
+  </div>
+</section>
 
 <main id="app" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6"></main>
 
 <footer class="border-t border-zinc-200/80 bg-white px-4 py-4 text-center text-xs leading-relaxed text-zinc-600">
   This page is a self-contained, client-side port of MedPulse's deterministic rule engine (safety floor, negation-aware triage, ICD-10, SOAP, booking).
   No server, no LLM, no data leaves your browser. Rules are the safety floor; the LLM in the full app can escalate but never downgrade urgency.
-  <a class="font-medium text-teal-700 underline underline-offset-4" href="https://github.com/MohamedAtiyah/Hackathon-UOWD-Unnamed">Source on GitHub</a>
+  <a class="font-medium text-teal-700 underline underline-offset-4" href="https://github.com/MohamedAtiyah/Hackathon-UOWD-MedPulse">Source on GitHub</a>
 </footer>
 
 <script>
@@ -165,6 +186,7 @@ function evaluateRisk(vitals, findings = []) {
 const cue = (level, department, label, ...tests) => ({ level, department, label, tests });
 const CUES = [
   cue("CRITICAL", "Cardiology", "Acute coronary syndrome pattern", /chest (pain|pressure|tightness)|crushing/i, /radiat|jaw|left arm|sweat|diaphore|nause|short of breath/i),
+  cue("CRITICAL", "Cardiology", "Crushing chest pain", /crushing/i, /chest/i),
   cue("CRITICAL", "Neurology", "Stroke warning signs (FAST)", /facial droop|slurred speech|one-sided weakness|arm weakness|sudden confusion and weakness/i),
   cue("CRITICAL", "Critical Care", "Suspected sepsis", /confus|drowsy|altered/i, /fever|febrile|rigors|chills/i),
   cue("CRITICAL", "Emergency Medicine", "Anaphylaxis", /anaphyla|throat (swelling|closing)|tongue swelling/i),
@@ -360,7 +382,7 @@ const srcBadge = `<span title="Deterministic rule engine" class="inline-flex rou
 const riskBar = (score) => { const s = SEV[scoreLevel(score)]; return `<div class="flex items-center gap-2"><div class="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 ring-1 ring-inset ring-zinc-200/60" role="meter" aria-label="Risk score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${score}"><div class="h-full rounded-full transition-[width] duration-500 ease-out ${s.bar}" style="width:${Math.min(100, score)}%"></div></div><span class="w-8 text-right text-sm font-semibold tabular-nums ${s.text}">${score}</span></div>`; };
 const card = (title, body, { action = "", cls = "" } = {}) => `<section class="${CARD} ${cls}">${title || action ? `<header class="flex items-center justify-between gap-3 rounded-t-xl border-b border-zinc-200/70 bg-zinc-50/60 px-5 py-3"><h2 class="text-sm font-semibold tracking-tight text-zinc-900">${title}</h2>${action}</header>` : ""}<div class="p-5">${body}</div></section>`;
 const tile = (label, value, tone = "text-zinc-900", hint = "") => `<div class="${CARD} p-4"><p class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">${label}</p><p class="mt-1.5 text-3xl font-semibold tracking-tight tabular-nums ${tone}">${value}</p>${hint ? `<p class="mt-1 text-xs text-zinc-600">${hint}</p>` : ""}</div>`;
-const pageHeader = (title, sub, extra = "") => `<div class="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8"><div><h1 class="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px] sm:leading-9">${title}</h1><p class="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-600">${sub}</p></div>${extra}</div>`;
+const pageHeader = (title, sub, extra = "") => `<div class="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8"><div><h2 class="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px] sm:leading-9">${title}</h2><p class="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-600">${sub}</p></div>${extra}</div>`;
 const fmtDate = (d) => new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(d) + " UTC";
 const VITALS = [["HR", (v) => v.hr, (v) => v.hr < 50 || v.hr > 100], ["BP", (v) => `${v.sbp}/${v.dbp}`, (v) => v.sbp < 90 || v.sbp > 179 || v.dbp >= 120], ["SpO₂", (v) => v.spo2, (v) => v.spo2 < 92], ["Temp", (v) => v.temp, (v) => v.temp < 36 || v.temp > 38.3], ["WBC", (v) => v.wbc, (v) => v.wbc < 4 || v.wbc > 12], ["Lactate", (v) => v.lactate, (v) => v.lactate >= 2]];
 const vitalsGrid = (v) => `<dl class="grid grid-cols-3 gap-2 sm:grid-cols-6">${VITALS.map(([l, val, bad]) => { const b = bad(v); return `<div class="rounded-lg border px-2.5 py-1.5 ${b ? "border-red-200 bg-red-50" : "border-zinc-200/80 bg-zinc-50/70"}"><dt class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">${l}</dt><dd class="text-sm font-semibold tabular-nums ${b ? "text-red-700" : "text-zinc-900"}">${val(v)}${b ? '<span class="sr-only"> (abnormal)</span>' : ""}</dd></div>`; }).join("")}</dl>`;
